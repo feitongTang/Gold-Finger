@@ -1,0 +1,7 @@
+.next
+coverage
+docs/superpowers
+drizzle/meta
+node_modules
+package-lock.json
+PROJECT.md

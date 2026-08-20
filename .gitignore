@@ -1,0 +1,18 @@
+# Dependencies and build output
+node_modules/
+.next/
+coverage/
+
+# Local environment files
+.env*
+!.env.example
+
+# Local SQLite data
+data/*.db*
+
+# Tooling
+*.tsbuildinfo
+!AGENTS.md
+
+# Operating system files
+.DS_Store

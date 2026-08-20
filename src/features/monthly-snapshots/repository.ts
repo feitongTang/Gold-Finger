@@ -91,6 +91,15 @@ export function createMonthlySnapshotRepository(db: DatabaseClient) {
     };
   }
 
+  function findAll(): MonthlySnapshot[] {
+    return db
+      .select({ month: monthlySnapshots.month })
+      .from(monthlySnapshots)
+      .orderBy(asc(monthlySnapshots.month))
+      .all()
+      .map(({ month }) => findByMonth(month) as MonthlySnapshot);
+  }
+
   function insertChildren(
     transaction: Parameters<Parameters<DatabaseClient["transaction"]>[0]>[0],
     snapshotId: number,
@@ -172,5 +181,5 @@ export function createMonthlySnapshotRepository(db: DatabaseClient) {
     return wasUpdated ? findByMonth(input.month) : null;
   }
 
-  return { create, update, findByMonth };
+  return { create, update, findByMonth, findAll };
 }

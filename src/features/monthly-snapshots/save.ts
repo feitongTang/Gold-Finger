@@ -45,7 +45,7 @@ export function saveMonthlySnapshot(
   } catch {
     return {
       status: "error",
-      message: "保存失败，请重试。",
+      message: "保存失败，本次输入未写入。请检查本地数据库是否可写后重试。",
       fieldErrors: {},
       values,
     };

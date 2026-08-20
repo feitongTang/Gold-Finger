@@ -118,6 +118,14 @@ describe("monthly snapshot repository", () => {
     expect(repository.findByMonth("2026-09")).toEqual(september);
   });
 
+  it("lists only saved snapshots in chronological month order", () => {
+    const repository = createMonthlySnapshotRepository(connection.db);
+    const september = repository.create(septemberSnapshot);
+    const august = repository.create(augustSnapshot);
+
+    expect(repository.findAll()).toEqual([august, september]);
+  });
+
   it("rolls back the complete create when a child amount is invalid", () => {
     const repository = createMonthlySnapshotRepository(connection.db);
 

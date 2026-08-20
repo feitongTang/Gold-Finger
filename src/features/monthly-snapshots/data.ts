@@ -8,9 +8,11 @@ export function loadMonthlyEntry(month: string) {
   const repository = createMonthlySnapshotRepository(
     getApplicationDatabase().db,
   );
+  const snapshots = repository.findAll();
 
   return {
-    snapshot: repository.findByMonth(month),
+    snapshot: snapshots.find((snapshot) => snapshot.month === month) ?? null,
+    snapshots,
     categories: INVESTMENT_CATEGORIES,
   };
 }

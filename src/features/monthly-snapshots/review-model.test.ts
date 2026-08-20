@@ -1,0 +1,181 @@
+import { describe, expect, it } from "vitest";
+
+import type { MonthlySnapshotInput } from "@/features/monthly-snapshots/repository";
+import {
+  calculateAssetAllocation,
+  calculateMonthlyReview,
+  calculateMonthlyTrend,
+} from "@/features/monthly-snapshots/review-model";
+
+const snapshot: MonthlySnapshotInput = {
+  month: "2026-08",
+  cashFlow: {
+    incomeCents: 3_000_000,
+    expenseCents: 800_000,
+    investmentContributionCents: 500_000,
+  },
+  cash: {
+    emergencyFundCents: 1_500_000,
+    goalFundCents: 600_000,
+    dailyCashCents: 200_000,
+  },
+  funds: [
+    {
+      name: "纳指基金 A",
+      category: "us-nasdaq-100",
+      marketValueCents: 1_200_000,
+      cumulativeInvestmentCents: 900_000,
+    },
+    {
+      name: "纳指基金 B",
+      category: "us-nasdaq-100",
+      marketValueCents: 300_000,
+      cumulativeInvestmentCents: 250_000,
+    },
+    {
+      name: "黄金基金",
+      category: "gold",
+      marketValueCents: 500_000,
+      cumulativeInvestmentCents: 450_000,
+    },
+  ],
+  liabilities: { huabeiBalanceCents: 100_000 },
+};
+
+describe("calculateMonthlyReview", () => {
+  it("calculates cash flow and asset totals from the saved snapshot", () => {
+    const review = calculateMonthlyReview(snapshot);
+
+    expect(review.cashFlow).toEqual({
+      incomeCents: BigInt(3_000_000),
+      expenseCents: BigInt(800_000),
+      investmentContributionCents: BigInt(500_000),
+      balanceCents: BigInt(1_700_000),
+    });
+    expect(review.assets).toEqual({
+      cashCents: BigInt(2_300_000),
+      investmentCents: BigInt(2_000_000),
+      liabilityCents: BigInt(100_000),
+      netWorthCents: BigInt(4_200_000),
+    });
+  });
+
+  it("groups multiple funds by their fixed investment category", () => {
+    expect(calculateMonthlyReview(snapshot).investmentCategories).toEqual([
+      {
+        category: "us-nasdaq-100",
+        marketValueCents: BigInt(1_500_000),
+        cumulativeInvestmentCents: BigInt(1_150_000),
+        fundCount: 2,
+      },
+      {
+        category: "gold",
+        marketValueCents: BigInt(500_000),
+        cumulativeInvestmentCents: BigInt(450_000),
+        fundCount: 1,
+      },
+    ]);
+  });
+
+  it("returns an empty category summary when the snapshot has no funds", () => {
+    const review = calculateMonthlyReview({ ...snapshot, funds: [] });
+
+    expect(review.assets.investmentCents).toBe(BigInt(0));
+    expect(review.assets.netWorthCents).toBe(BigInt(2_200_000));
+    expect(review.investmentCategories).toEqual([]);
+  });
+
+  it("keeps exact cents when valid saved amounts exceed a safe aggregate", () => {
+    const maximum = Number.MAX_SAFE_INTEGER;
+    const review = calculateMonthlyReview({
+      ...snapshot,
+      cash: {
+        emergencyFundCents: maximum,
+        goalFundCents: maximum,
+        dailyCashCents: maximum,
+      },
+      funds: [
+        {
+          name: "大额基金",
+          category: "gold",
+          marketValueCents: maximum,
+          cumulativeInvestmentCents: maximum,
+        },
+      ],
+      liabilities: { huabeiBalanceCents: maximum },
+    });
+
+    expect(review.assets.cashCents).toBe(BigInt("27021597764222973"));
+    expect(review.assets.netWorthCents).toBe(BigInt("27021597764222973"));
+  });
+});
+
+describe("calculateAssetAllocation", () => {
+  it("does not report a liability percentage without an asset base", () => {
+    expect(
+      calculateAssetAllocation(BigInt(0), BigInt(0), BigInt(120_000)),
+    ).toEqual({
+      cashPercent: 0,
+      investmentPercent: 0,
+      liabilityPercent: null,
+    });
+  });
+
+  it("keeps rounded cash and investment shares at a combined 100 percent", () => {
+    expect(calculateAssetAllocation(BigInt(1), BigInt(7), BigInt(0))).toEqual({
+      cashPercent: 13,
+      investmentPercent: 87,
+      liabilityPercent: 0,
+    });
+  });
+});
+
+describe("calculateMonthlyTrend", () => {
+  it("orders saved months and calculates every trend metric", () => {
+    const trend = calculateMonthlyTrend([
+      {
+        ...snapshot,
+        month: "2026-08",
+        cashFlow: {
+          incomeCents: 2_800_000,
+          expenseCents: 900_000,
+          investmentContributionCents: 600_000,
+        },
+      },
+      {
+        ...snapshot,
+        month: "2026-06",
+        cash: {
+          emergencyFundCents: 1_000_000,
+          goalFundCents: 500_000,
+          dailyCashCents: 100_000,
+        },
+        funds: [],
+        liabilities: { huabeiBalanceCents: 200_000 },
+      },
+    ]);
+
+    expect(trend).toEqual([
+      {
+        month: "2026-06",
+        netWorthCents: BigInt(1_400_000),
+        cashFlowBalanceCents: BigInt(1_700_000),
+        cashCents: BigInt(1_600_000),
+        investmentCents: BigInt(0),
+        liabilityCents: BigInt(200_000),
+      },
+      {
+        month: "2026-08",
+        netWorthCents: BigInt(4_200_000),
+        cashFlowBalanceCents: BigInt(1_300_000),
+        cashCents: BigInt(2_300_000),
+        investmentCents: BigInt(2_000_000),
+        liabilityCents: BigInt(100_000),
+      },
+    ]);
+  });
+
+  it("returns no trend points when no month has been saved", () => {
+    expect(calculateMonthlyTrend([])).toEqual([]);
+  });
+});

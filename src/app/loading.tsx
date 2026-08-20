@@ -5,16 +5,31 @@ export default function Loading() {
       aria-busy="true"
       aria-label="正在载入月度记录"
     >
-      <header className="app-header">
+      <p className="sr-only" role="status">
+        正在载入月度记录，请稍候。
+      </p>
+      <header className="app-header" aria-hidden="true">
         <div className="app-header-inner">
           <p className="brand">Gold-Finger</p>
           <span className="header-divider" aria-hidden="true" />
           <p className="header-context">月度财务记录</p>
         </div>
       </header>
-      <main className="page-content">
+      <main className="page-content" aria-hidden="true">
         <div className="month-panel">
           <div className="skeleton skeleton-line" />
+        </div>
+        <div className="review-panel review-loading">
+          <div className="skeleton skeleton-review-title" />
+          <div className="metric-grid">
+            {[0, 1, 2, 3].map((item) => (
+              <div className="skeleton skeleton-review-card" key={item} />
+            ))}
+          </div>
+        </div>
+        <div className="history-panel review-loading">
+          <div className="skeleton skeleton-review-title" />
+          <div className="skeleton skeleton-review-card" />
         </div>
         <div className="snapshot-form">
           {["本月现金流", "现金资产", "基金资产", "负债"].map(

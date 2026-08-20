@@ -13,6 +13,7 @@ data/*.db*
 # Tooling
 *.tsbuildinfo
 !AGENTS.md
+.worktrees/
 
 # Operating system files
 .DS_Store

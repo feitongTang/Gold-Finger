@@ -2,24 +2,16 @@ import {
   INVESTMENT_CATEGORY_IDS,
   type InvestmentCategoryId,
 } from "@/db/schema";
+import { MAX_FUNDS } from "@/features/monthly-snapshots/form-model";
 import type { MonthlySnapshotInput } from "@/features/monthly-snapshots/repository";
 
 const MONEY_ERROR = "请输入不小于 0 的金额，最多保留两位小数";
-const MAX_FUNDS = 50;
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 const categoryIds = new Set<string>(INVESTMENT_CATEGORY_IDS);
 
 export type ParseResult =
   | { ok: true; value: MonthlySnapshotInput }
   | { ok: false; errors: Record<string, string> };
-
-export function formatCentsAsYuan(cents: number) {
-  const yuan = Math.floor(cents / 100);
-  const remainder = cents % 100;
-  return remainder === 0
-    ? String(yuan)
-    : `${yuan}.${String(remainder).padStart(2, "0")}`;
-}
 
 export function resolveSelectedMonth(
   requestedMonth: string | undefined,
@@ -85,20 +77,18 @@ export function parseMonthlySnapshotFormData(formData: FormData): ParseResult {
 
   const fundCountValue = stringValue(formData, "fundCount");
   const fundCount = Number(fundCountValue);
-  if (
-    !/^\d+$/.test(fundCountValue) ||
-    !Number.isSafeInteger(fundCount) ||
-    fundCount < 0 ||
-    fundCount > MAX_FUNDS
-  ) {
-    return {
-      ok: false,
-      errors: { fundCount: "基金数量无效，请刷新后重试" },
-    };
+  const fundCountIsValid =
+    /^\d+$/.test(fundCountValue) &&
+    Number.isSafeInteger(fundCount) &&
+    fundCount >= 0 &&
+    fundCount <= MAX_FUNDS;
+  if (!fundCountIsValid) {
+    errors.fundCount = "基金数量无效，请刷新后重试";
   }
 
   const funds: MonthlySnapshotInput["funds"] = [];
-  for (let index = 0; index < fundCount; index += 1) {
+  const parsedFundCount = fundCountIsValid ? fundCount : 0;
+  for (let index = 0; index < parsedFundCount; index += 1) {
     const prefix = `funds.${index}`;
     const name = stringValue(formData, `${prefix}.name`);
     const category = stringValue(formData, `${prefix}.category`);

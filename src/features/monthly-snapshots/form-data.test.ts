@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  formatCentsAsYuan,
   parseMonthlySnapshotFormData,
   resolveSelectedMonth,
 } from "@/features/monthly-snapshots/form-data";
+import { formatCentsAsYuan } from "@/features/monthly-snapshots/form-model";
 
 function validFormData() {
   const formData = new FormData();
@@ -136,6 +136,22 @@ describe("monthly snapshot form data", () => {
     expect(parseMonthlySnapshotFormData(formData)).toEqual({
       ok: false,
       errors: { fundCount: "基金数量无效，请刷新后重试" },
+    });
+  });
+
+  it("keeps other field errors when the fund count is invalid", () => {
+    const formData = validFormData();
+    formData.set("month", "2026-13");
+    formData.set("expense", "-1");
+    formData.set("fundCount", "999999999");
+
+    expect(parseMonthlySnapshotFormData(formData)).toEqual({
+      ok: false,
+      errors: {
+        month: "请选择有效月份",
+        expense: "请输入不小于 0 的金额，最多保留两位小数",
+        fundCount: "基金数量无效，请刷新后重试",
+      },
     });
   });
 });

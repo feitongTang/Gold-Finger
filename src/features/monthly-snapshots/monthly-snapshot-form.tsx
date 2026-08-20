@@ -3,8 +3,12 @@
 import { useActionState, useRef, useState } from "react";
 
 import { saveMonthlySnapshotAction } from "@/features/monthly-snapshots/actions";
-import { formatCentsAsYuan } from "@/features/monthly-snapshots/form-data";
-import { initialMonthlySnapshotFormState } from "@/features/monthly-snapshots/save";
+import {
+  canAddFund,
+  formatCentsAsYuan,
+  initialMonthlySnapshotFormState,
+  MAX_FUNDS,
+} from "@/features/monthly-snapshots/form-model";
 
 type CategoryOption = {
   id: string;
@@ -117,8 +121,16 @@ export function MonthlySnapshotForm({
     formatCentsAsYuan(cents ?? 0);
   const fieldValue = (name: string, fallback: string) =>
     state.values?.[name] ?? fallback;
+  const fundLimitReached = !canAddFund(fundRows.length);
+  const fundCountMessage = errors.fundCount
+    ? errors.fundCount
+    : fundLimitReached
+      ? `每个月最多添加 ${MAX_FUNDS} 只基金。`
+      : undefined;
 
   function addFund() {
+    if (!canAddFund(fundRows.length)) return;
+
     const id = `new-${nextFundId.current}`;
     nextFundId.current += 1;
     setFundState((current) => ({
@@ -235,13 +247,28 @@ export function MonthlySnapshotForm({
               <p>按当前持有情况填写；没有基金时可留空。</p>
             </div>
             <button
+              aria-describedby={
+                fundCountMessage ? "fund-count-message" : undefined
+              }
               className="secondary-button"
+              disabled={fundLimitReached}
               onClick={addFund}
               type="button"
             >
-              <span aria-hidden="true">＋</span> 添加基金
+              <span aria-hidden="true">＋</span>{" "}
+              {fundLimitReached ? "已达基金上限" : "添加基金"}
             </button>
           </div>
+
+          {fundCountMessage ? (
+            <p
+              className={`fund-count-message ${errors.fundCount ? "field-error" : ""}`}
+              id="fund-count-message"
+              role={errors.fundCount ? "alert" : "status"}
+            >
+              {fundCountMessage}
+            </p>
+          ) : null}
 
           {fundRows.length === 0 ? (
             <p className="empty-funds">还没有基金记录，按需添加即可。</p>

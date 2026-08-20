@@ -38,7 +38,7 @@ describe("save monthly snapshot", () => {
   it("creates a month that does not exist", () => {
     const repository = createMonthlySnapshotRepository(connection.db);
 
-    expect(saveMonthlySnapshot(repository, snapshotFormData())).toEqual({
+    expect(saveMonthlySnapshot(() => repository, snapshotFormData())).toEqual({
       status: "success",
       message: "2026-08 已保存",
       fieldErrors: {},
@@ -50,10 +50,13 @@ describe("save monthly snapshot", () => {
 
   it("updates an existing month through the same save entry point", () => {
     const repository = createMonthlySnapshotRepository(connection.db);
-    const createdState = saveMonthlySnapshot(repository, snapshotFormData());
+    const createdState = saveMonthlySnapshot(
+      () => repository,
+      snapshotFormData(),
+    );
 
     const updatedState = saveMonthlySnapshot(
-      repository,
+      () => repository,
       snapshotFormData("9500.25"),
     );
 
@@ -66,9 +69,13 @@ describe("save monthly snapshot", () => {
 
   it("returns field errors without changing saved data", () => {
     const repository = createMonthlySnapshotRepository(connection.db);
-    saveMonthlySnapshot(repository, snapshotFormData());
+    saveMonthlySnapshot(() => repository, snapshotFormData());
 
-    const state = saveMonthlySnapshot(repository, snapshotFormData("-1"));
+    let repositoryAccessed = false;
+    const state = saveMonthlySnapshot(() => {
+      repositoryAccessed = true;
+      return repository;
+    }, snapshotFormData("-1"));
 
     expect(state).toMatchObject({
       status: "error",
@@ -84,22 +91,15 @@ describe("save monthly snapshot", () => {
     expect(repository.findByMonth("2026-08")?.cashFlow.expenseCents).toBe(
       800_000,
     );
+    expect(repositoryAccessed).toBe(false);
   });
 
   it("turns persistence failures into a recoverable message", () => {
-    const repository = {
-      findByMonth() {
+    expect(
+      saveMonthlySnapshot(() => {
         throw new Error("SQLITE_CANTOPEN: /private/path");
-      },
-      create() {
-        throw new Error("not reached");
-      },
-      update() {
-        throw new Error("not reached");
-      },
-    };
-
-    expect(saveMonthlySnapshot(repository, snapshotFormData())).toMatchObject({
+      }, snapshotFormData()),
+    ).toMatchObject({
       status: "error",
       message: "保存失败，请重试。",
       fieldErrors: {},

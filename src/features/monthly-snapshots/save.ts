@@ -1,18 +1,6 @@
 import { parseMonthlySnapshotFormData } from "@/features/monthly-snapshots/form-data";
+import type { MonthlySnapshotFormState } from "@/features/monthly-snapshots/form-model";
 import type { createMonthlySnapshotRepository } from "@/features/monthly-snapshots/repository";
-
-export type MonthlySnapshotFormState = {
-  status: "idle" | "error" | "success";
-  message: string;
-  fieldErrors: Record<string, string>;
-  values?: Record<string, string>;
-};
-
-export const initialMonthlySnapshotFormState: MonthlySnapshotFormState = {
-  status: "idle",
-  message: "",
-  fieldErrors: {},
-};
 
 type MonthlySnapshotRepository = Pick<
   ReturnType<typeof createMonthlySnapshotRepository>,
@@ -28,7 +16,7 @@ function formValues(formData: FormData) {
 }
 
 export function saveMonthlySnapshot(
-  repository: MonthlySnapshotRepository,
+  getRepository: () => MonthlySnapshotRepository,
   formData: FormData,
 ): MonthlySnapshotFormState {
   const values = formValues(formData);
@@ -44,6 +32,7 @@ export function saveMonthlySnapshot(
   }
 
   try {
+    const repository = getRepository();
     const existing = repository.findByMonth(parsed.value.month);
     if (existing) repository.update(parsed.value);
     else repository.create(parsed.value);

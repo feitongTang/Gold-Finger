@@ -56,7 +56,7 @@ button {
 }
 
 button:disabled {
-  cursor: wait;
+  cursor: not-allowed;
 }
 
 :focus-visible {
@@ -440,6 +440,18 @@ select[aria-invalid="true"] {
   border-color: var(--accent);
 }
 
+.secondary-button:disabled {
+  border-color: var(--border);
+  color: var(--muted);
+  background: #f2f5f9;
+}
+
+.fund-count-message {
+  margin: -0.45rem 0 1rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
 .load-button {
   padding-inline: 1rem;
 }
@@ -455,6 +467,7 @@ select[aria-invalid="true"] {
   border-color: #a7b8cf;
   color: #eef3f9;
   background: #a7b8cf;
+  cursor: wait;
 }
 
 .form-actions {

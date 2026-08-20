@@ -1,11 +1,22 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { openDatabase, openMigratedDatabase } from "@/db/client";
 
 const openConnections: Array<ReturnType<typeof openDatabase>["sqlite"]> = [];
+const temporaryDirectories: string[] = [];
+const originalDatabaseFile = process.env.DATABASE_FILE;
 
 afterEach(() => {
   for (const connection of openConnections.splice(0)) connection.close();
+  for (const directory of temporaryDirectories.splice(0))
+    rmSync(directory, { recursive: true, force: true });
+  if (originalDatabaseFile === undefined) delete process.env.DATABASE_FILE;
+  else process.env.DATABASE_FILE = originalDatabaseFile;
+  vi.resetModules();
 });
 
 describe("openDatabase", () => {
@@ -31,5 +42,25 @@ describe("openDatabase", () => {
       .get() as { name: string } | undefined;
 
     expect(table?.name).toBe("monthly_snapshots");
+  });
+
+  it("opens the application singleton at DATABASE_FILE with migrations", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "gold-finger-db-"));
+    temporaryDirectories.push(directory);
+    const databaseFile = join(directory, "application.db");
+    process.env.DATABASE_FILE = databaseFile;
+    vi.resetModules();
+    const { getApplicationDatabase } = await import("@/db/client");
+
+    const { sqlite } = getApplicationDatabase();
+    openConnections.push(sqlite);
+    const table = sqlite
+      .prepare(
+        "select name from sqlite_master where type = 'table' and name = 'monthly_snapshots'",
+      )
+      .get() as { name: string } | undefined;
+
+    expect(table?.name).toBe("monthly_snapshots");
+    expect(existsSync(databaseFile)).toBe(true);
   });
 });

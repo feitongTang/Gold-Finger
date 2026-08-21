@@ -9,6 +9,8 @@ coverage/
 
 # Local SQLite data
 data/*.db*
+data/*.sqlite*
+data/*.sqlite3*
 
 # Tooling
 *.tsbuildinfo

@@ -32,7 +32,7 @@ type SnapshotValues = {
     name: string;
     category: string;
     marketValueCents: number;
-    cumulativeInvestmentCents: number;
+    monthlyInvestmentCents: number;
   }>;
   liabilities: { huabeiBalanceCents: number };
 };
@@ -42,7 +42,7 @@ type FundRow = {
   name: string;
   category: string;
   marketValue: string;
-  cumulativeInvestment: string;
+  monthlyInvestment: string;
 };
 
 type MoneyFieldProps = {
@@ -83,36 +83,38 @@ function MoneyField({ name, label, defaultValue, error }: MoneyFieldProps) {
   );
 }
 
-function createFundRows(snapshot: SnapshotValues | null): FundRow[] {
-  return (snapshot?.funds ?? []).map((fund, index) => ({
+function createFundRows(funds: SnapshotValues["funds"]): FundRow[] {
+  return funds.map((fund, index) => ({
     id: `saved-${index}`,
     name: fund.name,
     category: fund.category,
     marketValue: formatCentsAsYuan(fund.marketValueCents),
-    cumulativeInvestment: formatCentsAsYuan(fund.cumulativeInvestmentCents),
+    monthlyInvestment: formatCentsAsYuan(fund.monthlyInvestmentCents),
   }));
 }
 
 export function MonthlySnapshotForm({
   month,
   snapshot,
+  initialFunds,
   categories,
 }: {
   month: string;
   snapshot: SnapshotValues | null;
+  initialFunds: SnapshotValues["funds"];
   categories: ReadonlyArray<CategoryOption>;
 }) {
   const [state, formAction, pending] = useActionState(
     saveMonthlySnapshotAction,
     initialMonthlySnapshotFormState,
   );
-  const fundSource = JSON.stringify(snapshot?.funds ?? []);
+  const fundSource = JSON.stringify(initialFunds);
   const [fundState, setFundState] = useState(() => ({
     source: fundSource,
-    rows: createFundRows(snapshot),
+    rows: createFundRows(initialFunds),
   }));
   if (fundState.source !== fundSource) {
-    setFundState({ source: fundSource, rows: createFundRows(snapshot) });
+    setFundState({ source: fundSource, rows: createFundRows(initialFunds) });
   }
   const fundRows = fundState.rows;
   const nextFundId = useRef(fundRows.length);
@@ -122,8 +124,9 @@ export function MonthlySnapshotForm({
   const fieldValue = (name: string, fallback: string) =>
     state.values?.[name] ?? fallback;
   const fundLimitReached = !canAddFund(fundRows.length);
-  const fundCountMessage = errors.fundCount
-    ? errors.fundCount
+  const fundError = errors.fundCount ?? errors.fundInvestmentTotal;
+  const fundCountMessage = fundError
+    ? fundError
     : fundLimitReached
       ? `每个月最多添加 ${MAX_FUNDS} 只基金。`
       : undefined;
@@ -142,7 +145,7 @@ export function MonthlySnapshotForm({
           name: "",
           category: categories[0]?.id ?? "",
           marketValue: "0",
-          cumulativeInvestment: "0",
+          monthlyInvestment: "0",
         },
       ],
     }));
@@ -166,7 +169,7 @@ export function MonthlySnapshotForm({
         </div>
         <div className="section-content">
           <h2 id="cash-flow-title">本月现金流</h2>
-          <div className="field-grid field-grid-three">
+          <div className="field-grid field-grid-two">
             <MoneyField
               defaultValue={fieldValue(
                 "income",
@@ -184,15 +187,6 @@ export function MonthlySnapshotForm({
               error={errors.expense}
               label="支出"
               name="expense"
-            />
-            <MoneyField
-              defaultValue={fieldValue(
-                "investmentContribution",
-                centsValue(snapshot?.cashFlow.investmentContributionCents),
-              )}
-              error={errors.investmentContribution}
-              label="投资投入"
-              name="investmentContribution"
             />
           </div>
         </div>
@@ -246,25 +240,13 @@ export function MonthlySnapshotForm({
               <h2 id="fund-assets-title">基金资产</h2>
               <p>按当前持有情况填写；没有基金时可留空。</p>
             </div>
-            <button
-              aria-describedby={
-                fundCountMessage ? "fund-count-message" : undefined
-              }
-              className="secondary-button"
-              disabled={fundLimitReached}
-              onClick={addFund}
-              type="button"
-            >
-              <span aria-hidden="true">＋</span>{" "}
-              {fundLimitReached ? "已达基金上限" : "添加基金"}
-            </button>
           </div>
 
           {fundCountMessage ? (
             <p
-              className={`fund-count-message ${errors.fundCount ? "field-error" : ""}`}
+              className={`fund-count-message ${fundError ? "field-error" : ""}`}
               id="fund-count-message"
-              role={errors.fundCount ? "alert" : "status"}
+              role={fundError ? "alert" : "status"}
             >
               {fundCountMessage}
             </p>
@@ -349,12 +331,12 @@ export function MonthlySnapshotForm({
                       />
                       <MoneyField
                         defaultValue={fieldValue(
-                          `${prefix}.cumulativeInvestment`,
-                          fund.cumulativeInvestment,
+                          `${prefix}.monthlyInvestment`,
+                          fund.monthlyInvestment,
                         )}
-                        error={errors[`${prefix}.cumulativeInvestment`]}
-                        label="累计投入"
-                        name={`${prefix}.cumulativeInvestment`}
+                        error={errors[`${prefix}.monthlyInvestment`]}
+                        label="本月投入"
+                        name={`${prefix}.monthlyInvestment`}
                       />
                       <button
                         aria-label={`移除基金 ${index + 1}${fund.name ? `：${fund.name}` : ""}`}
@@ -370,6 +352,21 @@ export function MonthlySnapshotForm({
               })}
             </div>
           )}
+
+          <div className="fund-add-actions">
+            <button
+              aria-describedby={
+                fundCountMessage ? "fund-count-message" : undefined
+              }
+              className="secondary-button"
+              disabled={fundLimitReached}
+              onClick={addFund}
+              type="button"
+            >
+              <span aria-hidden="true">＋</span>{" "}
+              {fundLimitReached ? "已达基金上限" : "添加基金"}
+            </button>
+          </div>
         </div>
       </section>
 

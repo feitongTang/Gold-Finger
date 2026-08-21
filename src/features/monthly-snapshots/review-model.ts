@@ -3,8 +3,29 @@ import type { MonthlySnapshotInput } from "@/features/monthly-snapshots/reposito
 type InvestmentCategorySummary = {
   category: MonthlySnapshotInput["funds"][number]["category"];
   marketValueCents: bigint;
-  cumulativeInvestmentCents: bigint;
+  monthlyInvestmentCents: bigint;
   fundCount: number;
+};
+
+export type InvestmentAllocationItem = {
+  id: string;
+  label: string;
+  percentage: number;
+  children: InvestmentAllocationItem[];
+};
+
+type InvestmentCategoryDefinition = {
+  id: InvestmentCategorySummary["category"];
+  assetClass: string;
+  market?: string;
+  label: string;
+};
+
+type InvestmentAllocationNode = {
+  id: string;
+  label: string;
+  marketValueCents: bigint;
+  children: InvestmentAllocationNode[];
 };
 
 function roundedPercent(part: bigint, total: bigint) {
@@ -35,6 +56,90 @@ export function calculateAssetAllocation(
   };
 }
 
+function findOrCreateAllocationNode(
+  nodes: InvestmentAllocationNode[],
+  id: string,
+  label: string,
+) {
+  const existing = nodes.find((node) => node.id === id);
+  if (existing) return existing;
+
+  const node: InvestmentAllocationNode = {
+    id,
+    label,
+    marketValueCents: BigInt(0),
+    children: [],
+  };
+  nodes.push(node);
+  return node;
+}
+
+function finalizeAllocationNodes(
+  nodes: InvestmentAllocationNode[],
+): InvestmentAllocationItem[] {
+  const totalCents = nodes.reduce(
+    (total, node) => total + node.marketValueCents,
+    BigInt(0),
+  );
+
+  return nodes.map((node) => ({
+    id: node.id,
+    label: node.label,
+    percentage:
+      totalCents === BigInt(0)
+        ? 0
+        : roundedPercent(node.marketValueCents, totalCents),
+    children: finalizeAllocationNodes(node.children),
+  }));
+}
+
+export function calculateInvestmentAllocation(
+  summaries: ReadonlyArray<InvestmentCategorySummary>,
+  categories: ReadonlyArray<InvestmentCategoryDefinition>,
+) {
+  const summaryByCategory = new Map(
+    summaries.map((summary) => [summary.category, summary]),
+  );
+  const assetClasses: InvestmentAllocationNode[] = [];
+
+  for (const category of categories) {
+    const summary = summaryByCategory.get(category.id);
+    if (!summary) continue;
+
+    const assetClass = findOrCreateAllocationNode(
+      assetClasses,
+      `asset-class:${category.assetClass}`,
+      category.assetClass,
+    );
+    assetClass.marketValueCents += summary.marketValueCents;
+
+    if (category.market && category.market !== category.label) {
+      const market = findOrCreateAllocationNode(
+        assetClass.children,
+        `market:${category.market}`,
+        category.market,
+      );
+      market.marketValueCents += summary.marketValueCents;
+      const fixedCategory = findOrCreateAllocationNode(
+        market.children,
+        `category:${category.id}`,
+        category.label,
+      );
+      fixedCategory.marketValueCents += summary.marketValueCents;
+      continue;
+    }
+
+    const fixedCategory = findOrCreateAllocationNode(
+      assetClass.children,
+      `category:${category.id}`,
+      category.label,
+    );
+    fixedCategory.marketValueCents += summary.marketValueCents;
+  }
+
+  return finalizeAllocationNodes(assetClasses);
+}
+
 export function calculateMonthlyReview(snapshot: MonthlySnapshotInput) {
   const cashCents =
     BigInt(snapshot.cash.emergencyFundCents) +
@@ -46,11 +151,13 @@ export function calculateMonthlyReview(snapshot: MonthlySnapshotInput) {
     number
   >();
   let investmentCents = BigInt(0);
+  let investmentContributionCents = BigInt(0);
 
   for (const fund of snapshot.funds) {
     const marketValueCents = BigInt(fund.marketValueCents);
-    const cumulativeInvestmentCents = BigInt(fund.cumulativeInvestmentCents);
+    const monthlyInvestmentCents = BigInt(fund.monthlyInvestmentCents);
     investmentCents += marketValueCents;
+    investmentContributionCents += monthlyInvestmentCents;
     const existingIndex = categoryIndexes.get(fund.category);
 
     if (existingIndex === undefined) {
@@ -58,7 +165,7 @@ export function calculateMonthlyReview(snapshot: MonthlySnapshotInput) {
       investmentCategories.push({
         category: fund.category,
         marketValueCents,
-        cumulativeInvestmentCents,
+        monthlyInvestmentCents,
         fundCount: 1,
       });
       continue;
@@ -66,15 +173,12 @@ export function calculateMonthlyReview(snapshot: MonthlySnapshotInput) {
 
     const existing = investmentCategories[existingIndex];
     existing.marketValueCents += marketValueCents;
-    existing.cumulativeInvestmentCents += cumulativeInvestmentCents;
+    existing.monthlyInvestmentCents += monthlyInvestmentCents;
     existing.fundCount += 1;
   }
 
   const incomeCents = BigInt(snapshot.cashFlow.incomeCents);
   const expenseCents = BigInt(snapshot.cashFlow.expenseCents);
-  const investmentContributionCents = BigInt(
-    snapshot.cashFlow.investmentContributionCents,
-  );
   const liabilityCents = BigInt(snapshot.liabilities.huabeiBalanceCents);
 
   return {

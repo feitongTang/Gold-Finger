@@ -51,7 +51,6 @@ export function parseMonthlySnapshotFormData(formData: FormData): ParseResult {
   const moneyFields = {
     income: stringValue(formData, "income"),
     expense: stringValue(formData, "expense"),
-    investmentContribution: stringValue(formData, "investmentContribution"),
     emergencyFund: stringValue(formData, "emergencyFund"),
     goalFund: stringValue(formData, "goalFund"),
     dailyCash: stringValue(formData, "dailyCash"),
@@ -60,7 +59,6 @@ export function parseMonthlySnapshotFormData(formData: FormData): ParseResult {
   const parsedMoney: Record<keyof typeof moneyFields, number> = {
     income: 0,
     expense: 0,
-    investmentContribution: 0,
     emergencyFund: 0,
     goalFund: 0,
     dailyCash: 0,
@@ -95,30 +93,38 @@ export function parseMonthlySnapshotFormData(formData: FormData): ParseResult {
     const marketValue = parseYuan(
       stringValue(formData, `${prefix}.marketValue`),
     );
-    const cumulativeInvestment = parseYuan(
-      stringValue(formData, `${prefix}.cumulativeInvestment`),
+    const monthlyInvestment = parseYuan(
+      stringValue(formData, `${prefix}.monthlyInvestment`),
     );
 
     if (!name) errors[`${prefix}.name`] = "请输入基金名称";
     if (!isInvestmentCategory(category))
       errors[`${prefix}.category`] = "请选择有效分类";
     if (marketValue === null) errors[`${prefix}.marketValue`] = MONEY_ERROR;
-    if (cumulativeInvestment === null)
-      errors[`${prefix}.cumulativeInvestment`] = MONEY_ERROR;
+    if (monthlyInvestment === null)
+      errors[`${prefix}.monthlyInvestment`] = MONEY_ERROR;
 
     if (
       name &&
       isInvestmentCategory(category) &&
       marketValue !== null &&
-      cumulativeInvestment !== null
+      monthlyInvestment !== null
     ) {
       funds.push({
         name,
         category,
         marketValueCents: marketValue,
-        cumulativeInvestmentCents: cumulativeInvestment,
+        monthlyInvestmentCents: monthlyInvestment,
       });
     }
+  }
+
+  const investmentContribution = funds.reduce(
+    (total, fund) => total + BigInt(fund.monthlyInvestmentCents),
+    BigInt(0),
+  );
+  if (investmentContribution > BigInt(Number.MAX_SAFE_INTEGER)) {
+    errors.fundInvestmentTotal = "本月投入合计金额过大";
   }
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
@@ -130,7 +136,7 @@ export function parseMonthlySnapshotFormData(formData: FormData): ParseResult {
       cashFlow: {
         incomeCents: parsedMoney.income,
         expenseCents: parsedMoney.expense,
-        investmentContributionCents: parsedMoney.investmentContribution,
+        investmentContributionCents: Number(investmentContribution),
       },
       cash: {
         emergencyFundCents: parsedMoney.emergencyFund,

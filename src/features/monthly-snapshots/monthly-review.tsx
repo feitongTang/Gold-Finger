@@ -1,9 +1,11 @@
 import Link from "next/link";
 
 import type { InvestmentCategoryId } from "@/db/schema";
+import { InvestmentAllocation } from "@/features/monthly-snapshots/investment-allocation";
 import type { MonthlySnapshot } from "@/features/monthly-snapshots/repository";
 import {
   calculateAssetAllocation,
+  calculateInvestmentAllocation,
   calculateMonthlyReview,
   calculateMonthlyTrend,
 } from "@/features/monthly-snapshots/review-model";
@@ -73,8 +75,9 @@ export function MonthlyReview({
     review.assets.investmentCents,
     review.assets.liabilityCents,
   );
-  const categoryById = new Map(
-    categories.map((category) => [category.id, category]),
+  const investmentAllocation = calculateInvestmentAllocation(
+    review.investmentCategories,
+    categories,
   );
 
   return (
@@ -163,43 +166,12 @@ export function MonthlyReview({
       >
         <div className="review-section-heading">
           <h3 id="portfolio-review-title">投资组合分类</h3>
-          <p>按固定分类合并当前市值与累计投入</p>
+          <p>点击资产类型可查看下一级分类</p>
         </div>
         {review.investmentCategories.length === 0 ? (
           <p className="review-no-investments">这个月份没有基金资产。</p>
         ) : (
-          <div className="category-list">
-            {review.investmentCategories.map((summary) => {
-              const category = categoryById.get(summary.category);
-              const categoryName = category
-                ? [category.assetClass, category.market, category.label]
-                    .filter(
-                      (part, index, values) =>
-                        part && values.indexOf(part) === index,
-                    )
-                    .join(" · ")
-                : summary.category;
-
-              return (
-                <div className="category-row" key={summary.category}>
-                  <div className="category-name">
-                    <strong>{categoryName}</strong>
-                    <span>{summary.fundCount} 只基金</span>
-                  </div>
-                  <dl className="category-values">
-                    <div>
-                      <dt>当前市值</dt>
-                      <dd>{formatMoney(summary.marketValueCents)}</dd>
-                    </div>
-                    <div>
-                      <dt>累计投入</dt>
-                      <dd>{formatMoney(summary.cumulativeInvestmentCents)}</dd>
-                    </div>
-                  </dl>
-                </div>
-              );
-            })}
-          </div>
+          <InvestmentAllocation items={investmentAllocation} key={month} />
         )}
       </div>
     </section>

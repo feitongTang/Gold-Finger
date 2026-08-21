@@ -151,7 +151,7 @@ export const fundAssets = sqliteTable(
     name: text("name").notNull(),
     category: text("category", { enum: INVESTMENT_CATEGORY_IDS }).notNull(),
     marketValueCents: integer("market_value_cents").notNull(),
-    cumulativeInvestmentCents: integer("cumulative_investment_cents").notNull(),
+    monthlyInvestmentCents: integer("cumulative_investment_cents").notNull(),
   },
   (table) => [
     check("fund_assets_name_not_empty", sql`length(trim(${table.name})) > 0`),
@@ -165,7 +165,7 @@ export const fundAssets = sqliteTable(
     ),
     check(
       "fund_assets_cumulative_investment_non_negative",
-      sql`typeof(${table.cumulativeInvestmentCents}) = 'integer' and ${table.cumulativeInvestmentCents} >= 0`,
+      sql`typeof(${table.monthlyInvestmentCents}) = 'integer' and ${table.monthlyInvestmentCents} >= 0`,
     ),
   ],
 );

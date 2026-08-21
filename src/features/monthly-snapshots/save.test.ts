@@ -10,7 +10,6 @@ function snapshotFormData(expense = "8000") {
   formData.set("month", "2026-08");
   formData.set("income", "25000");
   formData.set("expense", expense);
-  formData.set("investmentContribution", "6000");
   formData.set("emergencyFund", "50000");
   formData.set("goalFund", "20000");
   formData.set("dailyCash", "8000");
@@ -19,7 +18,7 @@ function snapshotFormData(expense = "8000") {
   formData.set("funds.0.name", "纳斯达克指数基金");
   formData.set("funds.0.category", "us-nasdaq-100");
   formData.set("funds.0.marketValue", "30000");
-  formData.set("funds.0.cumulativeInvestment", "24000");
+  formData.set("funds.0.monthlyInvestment", "24000");
   return formData;
 }
 

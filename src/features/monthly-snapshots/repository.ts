@@ -26,7 +26,7 @@ export type MonthlySnapshotInput = {
     name: string;
     category: InvestmentCategoryId;
     marketValueCents: number;
-    cumulativeInvestmentCents: number;
+    monthlyInvestmentCents: number;
   }>;
   liabilities: {
     huabeiBalanceCents: number;
@@ -85,7 +85,7 @@ export function createMonthlySnapshotRepository(db: DatabaseClient) {
         name: fund.name,
         category: fund.category,
         marketValueCents: fund.marketValueCents,
-        cumulativeInvestmentCents: fund.cumulativeInvestmentCents,
+        monthlyInvestmentCents: fund.monthlyInvestmentCents,
       })),
       liabilities: { huabeiBalanceCents: liability.huabeiBalanceCents },
     };

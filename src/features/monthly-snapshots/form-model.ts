@@ -1,7 +1,23 @@
+import type { MonthlySnapshot } from "@/features/monthly-snapshots/repository";
+
 export const MAX_FUNDS = 50;
 
 export function canAddFund(currentCount: number) {
   return currentCount < MAX_FUNDS;
+}
+
+export function createFundTemplate(
+  month: string,
+  snapshots: ReadonlyArray<MonthlySnapshot>,
+): MonthlySnapshot["funds"] {
+  const previousSnapshot = snapshots.findLast(
+    (snapshot) => snapshot.month < month,
+  );
+
+  return (previousSnapshot?.funds ?? []).map((fund) => ({
+    ...fund,
+    monthlyInvestmentCents: 0,
+  }));
 }
 
 export type MonthlySnapshotFormState = {

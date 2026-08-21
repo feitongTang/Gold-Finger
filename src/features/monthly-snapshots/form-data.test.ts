@@ -11,7 +11,6 @@ function validFormData() {
   formData.set("month", "2026-08");
   formData.set("income", "25000");
   formData.set("expense", "8000.50");
-  formData.set("investmentContribution", "6000");
   formData.set("emergencyFund", "50000");
   formData.set("goalFund", "20000");
   formData.set("dailyCash", "8000");
@@ -20,11 +19,11 @@ function validFormData() {
   formData.set("funds.0.name", "  纳斯达克指数基金  ");
   formData.set("funds.0.category", "us-nasdaq-100");
   formData.set("funds.0.marketValue", "30000.01");
-  formData.set("funds.0.cumulativeInvestment", "24000");
+  formData.set("funds.0.monthlyInvestment", "24000");
   formData.set("funds.1.name", "黄金 ETF");
   formData.set("funds.1.category", "gold");
   formData.set("funds.1.marketValue", "10000");
-  formData.set("funds.1.cumulativeInvestment", "9000.99");
+  formData.set("funds.1.monthlyInvestment", "9000.99");
   return formData;
 }
 
@@ -54,7 +53,7 @@ describe("monthly snapshot form data", () => {
         cashFlow: {
           incomeCents: 2_500_000,
           expenseCents: 800_050,
-          investmentContributionCents: 600_000,
+          investmentContributionCents: 3_300_099,
         },
         cash: {
           emergencyFundCents: 5_000_000,
@@ -66,17 +65,40 @@ describe("monthly snapshot form data", () => {
             name: "纳斯达克指数基金",
             category: "us-nasdaq-100",
             marketValueCents: 3_000_001,
-            cumulativeInvestmentCents: 2_400_000,
+            monthlyInvestmentCents: 2_400_000,
           },
           {
             name: "黄金 ETF",
             category: "gold",
             marketValueCents: 1_000_000,
-            cumulativeInvestmentCents: 900_099,
+            monthlyInvestmentCents: 900_099,
           },
         ],
         liabilities: { huabeiBalanceCents: 120_008 },
       },
+    });
+  });
+
+  it("derives cash-flow investment contribution from the fund inputs", () => {
+    const formData = validFormData();
+    const result = parseMonthlySnapshotFormData(formData);
+
+    expect(result).toMatchObject({
+      ok: true,
+      value: {
+        cashFlow: { investmentContributionCents: 3_300_099 },
+      },
+    });
+  });
+
+  it("rejects a fund investment total that exceeds the safe integer range", () => {
+    const formData = validFormData();
+    formData.set("funds.0.monthlyInvestment", "90071992547409.91");
+    formData.set("funds.1.monthlyInvestment", "0.01");
+
+    expect(parseMonthlySnapshotFormData(formData)).toMatchObject({
+      ok: false,
+      errors: { fundInvestmentTotal: "本月投入合计金额过大" },
     });
   });
 
@@ -85,7 +107,6 @@ describe("monthly snapshot form data", () => {
     for (const field of [
       "income",
       "expense",
-      "investmentContribution",
       "emergencyFund",
       "goalFund",
       "dailyCash",

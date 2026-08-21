@@ -22,7 +22,8 @@ export default async function Home({
   const requestedMonth =
     typeof query.month === "string" ? query.month : undefined;
   const month = resolveSelectedMonth(requestedMonth, currentMonth());
-  const { snapshot, snapshots, categories } = loadMonthlyEntry(month);
+  const { snapshot, fundTemplate, snapshots, categories } =
+    loadMonthlyEntry(month);
 
   return (
     <>
@@ -98,6 +99,7 @@ export default async function Home({
 
         <MonthlySnapshotForm
           categories={categories}
+          initialFunds={snapshot?.funds ?? fundTemplate}
           key={month}
           month={month}
           snapshot={snapshot}

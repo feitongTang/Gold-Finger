@@ -14,6 +14,7 @@ const snapshot: MonthlySnapshotInput = {
   cashFlow: {
     incomeCents: 3_000_000,
     expenseCents: 800_000,
+    investmentProfitLossCents: 125_000,
     investmentContributionCents: 500_000,
   },
   cash: {
@@ -51,6 +52,7 @@ describe("calculateMonthlyReview", () => {
     expect(review.cashFlow).toEqual({
       incomeCents: BigInt(3_000_000),
       expenseCents: BigInt(800_000),
+      investmentProfitLossCents: BigInt(125_000),
       investmentContributionCents: BigInt(1_600_000),
       balanceCents: BigInt(600_000),
     });
@@ -60,6 +62,21 @@ describe("calculateMonthlyReview", () => {
       liabilityCents: BigInt(100_000),
       netWorthCents: BigInt(4_200_000),
     });
+  });
+
+  it("treats a negative net contribution as cash returned by a redemption", () => {
+    const review = calculateMonthlyReview({
+      ...snapshot,
+      funds: [
+        {
+          ...snapshot.funds[0],
+          monthlyInvestmentCents: -500_000,
+        },
+      ],
+    });
+
+    expect(review.cashFlow.investmentContributionCents).toBe(BigInt(-500_000));
+    expect(review.cashFlow.balanceCents).toBe(BigInt(2_700_000));
   });
 
   it("groups multiple funds by their fixed investment category", () => {
@@ -257,6 +274,7 @@ describe("calculateMonthlyTrend", () => {
         cashFlow: {
           incomeCents: 2_800_000,
           expenseCents: 900_000,
+          investmentProfitLossCents: 75_000,
           investmentContributionCents: 600_000,
         },
       },

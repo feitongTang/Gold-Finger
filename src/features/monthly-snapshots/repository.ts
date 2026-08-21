@@ -15,6 +15,7 @@ export type MonthlySnapshotInput = {
   cashFlow: {
     incomeCents: number;
     expenseCents: number;
+    investmentProfitLossCents: number;
     investmentContributionCents: number;
   };
   cash: {
@@ -74,6 +75,7 @@ export function createMonthlySnapshotRepository(db: DatabaseClient) {
       cashFlow: {
         incomeCents: snapshot.incomeCents,
         expenseCents: snapshot.expenseCents,
+        investmentProfitLossCents: snapshot.investmentProfitLossCents,
         investmentContributionCents: snapshot.investmentContributionCents,
       },
       cash: {

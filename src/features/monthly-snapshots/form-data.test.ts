@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  parseMonthlySnapshotFormData,
-  resolveSelectedMonth,
-} from "@/features/monthly-snapshots/form-data";
+import * as formDataModel from "@/features/monthly-snapshots/form-data";
 import { formatCentsAsYuan } from "@/features/monthly-snapshots/form-model";
 
 function validFormData() {
@@ -11,6 +8,7 @@ function validFormData() {
   formData.set("month", "2026-08");
   formData.set("income", "25000");
   formData.set("expense", "8000.50");
+  formData.set("investmentProfitLoss", "358.42");
   formData.set("emergencyFund", "50000");
   formData.set("goalFund", "20000");
   formData.set("dailyCash", "8000");
@@ -33,7 +31,22 @@ describe("monthly snapshot form data", () => {
     [undefined, "2026-07"],
     ["2026-13", "2026-07"],
   ])("resolves requested month %s to %s", (requestedMonth, expectedMonth) => {
-    expect(resolveSelectedMonth(requestedMonth, "2026-07")).toBe(expectedMonth);
+    expect(formDataModel.resolveSelectedMonth(requestedMonth, "2026-07")).toBe(
+      expectedMonth,
+    );
+  });
+
+  it.each([
+    ["2026-01", -1, "2025-12"],
+    ["2026-12", 1, "2027-01"],
+  ])("moves %s by %i month to %s", (month, offset, expectedMonth) => {
+    const shiftMonth = (
+      formDataModel as typeof formDataModel & {
+        shiftMonth?: (value: string, amount: number) => string;
+      }
+    ).shiftMonth;
+
+    expect(shiftMonth?.(month, offset)).toBe(expectedMonth);
   });
 
   it.each([
@@ -46,42 +59,45 @@ describe("monthly snapshot form data", () => {
   });
 
   it("parses yuan amounts exactly and keeps funds in input order", () => {
-    expect(parseMonthlySnapshotFormData(validFormData())).toEqual({
-      ok: true,
-      value: {
-        month: "2026-08",
-        cashFlow: {
-          incomeCents: 2_500_000,
-          expenseCents: 800_050,
-          investmentContributionCents: 3_300_099,
-        },
-        cash: {
-          emergencyFundCents: 5_000_000,
-          goalFundCents: 2_000_000,
-          dailyCashCents: 800_000,
-        },
-        funds: [
-          {
-            name: "纳斯达克指数基金",
-            category: "us-nasdaq-100",
-            marketValueCents: 3_000_001,
-            monthlyInvestmentCents: 2_400_000,
+    expect(formDataModel.parseMonthlySnapshotFormData(validFormData())).toEqual(
+      {
+        ok: true,
+        value: {
+          month: "2026-08",
+          cashFlow: {
+            incomeCents: 2_500_000,
+            expenseCents: 800_050,
+            investmentProfitLossCents: 35_842,
+            investmentContributionCents: 3_300_099,
           },
-          {
-            name: "黄金 ETF",
-            category: "gold",
-            marketValueCents: 1_000_000,
-            monthlyInvestmentCents: 900_099,
+          cash: {
+            emergencyFundCents: 5_000_000,
+            goalFundCents: 2_000_000,
+            dailyCashCents: 800_000,
           },
-        ],
-        liabilities: { huabeiBalanceCents: 120_008 },
+          funds: [
+            {
+              name: "纳斯达克指数基金",
+              category: "us-nasdaq-100",
+              marketValueCents: 3_000_001,
+              monthlyInvestmentCents: 2_400_000,
+            },
+            {
+              name: "黄金 ETF",
+              category: "gold",
+              marketValueCents: 1_000_000,
+              monthlyInvestmentCents: 900_099,
+            },
+          ],
+          liabilities: { huabeiBalanceCents: 120_008 },
+        },
       },
-    });
+    );
   });
 
   it("derives cash-flow investment contribution from the fund inputs", () => {
     const formData = validFormData();
-    const result = parseMonthlySnapshotFormData(formData);
+    const result = formDataModel.parseMonthlySnapshotFormData(formData);
 
     expect(result).toMatchObject({
       ok: true,
@@ -91,14 +107,54 @@ describe("monthly snapshot form data", () => {
     });
   });
 
+  it("accepts negative investment profit and loss as a monthly loss", () => {
+    const formData = validFormData();
+    formData.set("investmentProfitLoss", "-358.42");
+
+    expect(formDataModel.parseMonthlySnapshotFormData(formData)).toMatchObject({
+      ok: true,
+      value: {
+        cashFlow: { investmentProfitLossCents: -35_842 },
+      },
+    });
+  });
+
+  it("treats a redemption as a negative fund contribution and nets it with purchases", () => {
+    const formData = validFormData();
+    formData.set("funds.0.monthlyInvestment", "-12000.34");
+    formData.set("funds.1.monthlyInvestment", "9000.99");
+
+    expect(formDataModel.parseMonthlySnapshotFormData(formData)).toMatchObject({
+      ok: true,
+      value: {
+        cashFlow: { investmentContributionCents: -299_935 },
+        funds: [
+          { monthlyInvestmentCents: -1_200_034 },
+          { monthlyInvestmentCents: 900_099 },
+        ],
+      },
+    });
+  });
+
   it("rejects a fund investment total that exceeds the safe integer range", () => {
     const formData = validFormData();
     formData.set("funds.0.monthlyInvestment", "90071992547409.91");
     formData.set("funds.1.monthlyInvestment", "0.01");
 
-    expect(parseMonthlySnapshotFormData(formData)).toMatchObject({
+    expect(formDataModel.parseMonthlySnapshotFormData(formData)).toMatchObject({
       ok: false,
-      errors: { fundInvestmentTotal: "本月投入合计金额过大" },
+      errors: { fundInvestmentTotal: "本月净投入合计金额过大" },
+    });
+  });
+
+  it("rejects a negative fund investment total outside the safe integer range", () => {
+    const formData = validFormData();
+    formData.set("funds.0.monthlyInvestment", "-90071992547409.91");
+    formData.set("funds.1.monthlyInvestment", "-0.01");
+
+    expect(formDataModel.parseMonthlySnapshotFormData(formData)).toMatchObject({
+      ok: false,
+      errors: { fundInvestmentTotal: "本月净投入合计金额过大" },
     });
   });
 
@@ -107,6 +163,7 @@ describe("monthly snapshot form data", () => {
     for (const field of [
       "income",
       "expense",
+      "investmentProfitLoss",
       "emergencyFund",
       "goalFund",
       "dailyCash",
@@ -116,7 +173,7 @@ describe("monthly snapshot form data", () => {
     }
     formData.set("fundCount", "0");
 
-    const result = parseMonthlySnapshotFormData(formData);
+    const result = formDataModel.parseMonthlySnapshotFormData(formData);
 
     expect(result).toMatchObject({ ok: true, value: { funds: [] } });
   });
@@ -130,7 +187,7 @@ describe("monthly snapshot form data", () => {
     const formData = validFormData();
     formData.set(field, value);
 
-    expect(parseMonthlySnapshotFormData(formData)).toMatchObject({
+    expect(formDataModel.parseMonthlySnapshotFormData(formData)).toMatchObject({
       ok: false,
       errors: { [field]: message },
     });
@@ -141,7 +198,7 @@ describe("monthly snapshot form data", () => {
     formData.set("funds.0.name", "   ");
     formData.set("funds.1.category", "crypto");
 
-    expect(parseMonthlySnapshotFormData(formData)).toMatchObject({
+    expect(formDataModel.parseMonthlySnapshotFormData(formData)).toMatchObject({
       ok: false,
       errors: {
         "funds.0.name": "请输入基金名称",
@@ -154,7 +211,7 @@ describe("monthly snapshot form data", () => {
     const formData = validFormData();
     formData.set("fundCount", "999999999");
 
-    expect(parseMonthlySnapshotFormData(formData)).toEqual({
+    expect(formDataModel.parseMonthlySnapshotFormData(formData)).toEqual({
       ok: false,
       errors: { fundCount: "基金数量无效，请刷新后重试" },
     });
@@ -166,7 +223,7 @@ describe("monthly snapshot form data", () => {
     formData.set("expense", "-1");
     formData.set("fundCount", "999999999");
 
-    expect(parseMonthlySnapshotFormData(formData)).toEqual({
+    expect(formDataModel.parseMonthlySnapshotFormData(formData)).toEqual({
       ok: false,
       errors: {
         month: "请选择有效月份",

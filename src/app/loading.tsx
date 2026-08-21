@@ -16,13 +16,11 @@ export default function Loading() {
         </div>
       </header>
       <main className="page-content" aria-hidden="true">
-        <div className="month-panel">
-          <div className="skeleton skeleton-line" />
-        </div>
         <div className="review-panel review-loading">
           <div className="skeleton skeleton-review-title" />
+          <div className="skeleton skeleton-line" />
           <div className="metric-grid">
-            {[0, 1, 2, 3].map((item) => (
+            {[0, 1, 2].map((item) => (
               <div className="skeleton skeleton-review-card" key={item} />
             ))}
           </div>
@@ -31,24 +29,9 @@ export default function Loading() {
           <div className="skeleton skeleton-review-title" />
           <div className="skeleton skeleton-review-card" />
         </div>
-        <div className="snapshot-form">
-          {["本月现金流", "现金资产", "基金资产", "负债"].map(
-            (title, index) => (
-              <section className="entry-section" key={title}>
-                <div className="section-marker" aria-hidden="true">
-                  {index + 1}
-                </div>
-                <div className="section-content">
-                  <h2>{title}</h2>
-                  <div className="field-grid field-grid-three">
-                    <div className="skeleton skeleton-line" />
-                    <div className="skeleton skeleton-line" />
-                    <div className="skeleton skeleton-line" />
-                  </div>
-                </div>
-              </section>
-            ),
-          )}
+        <div className="entry-toggle-panel">
+          <div className="skeleton skeleton-review-title" />
+          <div className="skeleton skeleton-line" />
         </div>
       </main>
     </div>

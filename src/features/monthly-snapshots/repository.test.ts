@@ -12,6 +12,7 @@ const augustSnapshot: MonthlySnapshotInput = {
   cashFlow: {
     incomeCents: 25_000_00,
     expenseCents: 8_000_00,
+    investmentProfitLossCents: 358_42,
     investmentContributionCents: 6_000_00,
   },
   cash: {
@@ -41,6 +42,7 @@ const septemberSnapshot: MonthlySnapshotInput = {
   cashFlow: {
     incomeCents: 26_000_00,
     expenseCents: 9_000_00,
+    investmentProfitLossCents: 420_00,
     investmentContributionCents: 7_000_00,
   },
   cash: {
@@ -81,6 +83,43 @@ describe("monthly snapshot repository", () => {
     expect(created).toEqual({ id: expect.any(Number), ...augustSnapshot });
     expect(repository.findByMonth("2026-08")).toEqual(created);
     expect(repository.findByMonth("2026-07")).toBeNull();
+  });
+
+  it("updates the manually recorded investment profit and loss", () => {
+    const repository = createMonthlySnapshotRepository(connection.db);
+    repository.create(augustSnapshot);
+
+    const updated = repository.update({
+      ...augustSnapshot,
+      cashFlow: {
+        ...augustSnapshot.cashFlow,
+        investmentProfitLossCents: -500_25,
+      },
+    });
+
+    expect(updated?.cashFlow.investmentProfitLossCents).toBe(-500_25);
+  });
+
+  it("creates and reads a snapshot containing a fund redemption", () => {
+    const repository = createMonthlySnapshotRepository(connection.db);
+    const redemption: MonthlySnapshotInput = {
+      ...augustSnapshot,
+      cashFlow: {
+        ...augustSnapshot.cashFlow,
+        investmentContributionCents: -10_000_00,
+      },
+      funds: [
+        {
+          ...augustSnapshot.funds[0],
+          monthlyInvestmentCents: -10_000_00,
+        },
+      ],
+    };
+
+    expect(repository.create(redemption)).toEqual({
+      id: expect.any(Number),
+      ...redemption,
+    });
   });
 
   it("updates the selected month and replaces its fund rows", () => {

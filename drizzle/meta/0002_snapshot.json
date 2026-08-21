@@ -1,0 +1,291 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "efcdc186-6c33-4ee4-9c91-d885a920d0b3",
+  "prevId": "3567d6bf-b688-4cb3-8c6d-94f07e1f1271",
+  "tables": {
+    "cash_assets": {
+      "name": "cash_assets",
+      "columns": {
+        "snapshot_id": {
+          "name": "snapshot_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "emergency_fund_cents": {
+          "name": "emergency_fund_cents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "goal_fund_cents": {
+          "name": "goal_fund_cents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "daily_cash_cents": {
+          "name": "daily_cash_cents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "cash_assets_snapshot_id_monthly_snapshots_id_fk": {
+          "name": "cash_assets_snapshot_id_monthly_snapshots_id_fk",
+          "tableFrom": "cash_assets",
+          "tableTo": "monthly_snapshots",
+          "columnsFrom": [
+            "snapshot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "cash_assets_emergency_fund_non_negative": {
+          "name": "cash_assets_emergency_fund_non_negative",
+          "value": "typeof(\"cash_assets\".\"emergency_fund_cents\") = 'integer' and \"cash_assets\".\"emergency_fund_cents\" >= 0"
+        },
+        "cash_assets_goal_fund_non_negative": {
+          "name": "cash_assets_goal_fund_non_negative",
+          "value": "typeof(\"cash_assets\".\"goal_fund_cents\") = 'integer' and \"cash_assets\".\"goal_fund_cents\" >= 0"
+        },
+        "cash_assets_daily_cash_non_negative": {
+          "name": "cash_assets_daily_cash_non_negative",
+          "value": "typeof(\"cash_assets\".\"daily_cash_cents\") = 'integer' and \"cash_assets\".\"daily_cash_cents\" >= 0"
+        }
+      }
+    },
+    "fund_assets": {
+      "name": "fund_assets",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "snapshot_id": {
+          "name": "snapshot_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "market_value_cents": {
+          "name": "market_value_cents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cumulative_investment_cents": {
+          "name": "cumulative_investment_cents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "fund_assets_snapshot_id_monthly_snapshots_id_fk": {
+          "name": "fund_assets_snapshot_id_monthly_snapshots_id_fk",
+          "tableFrom": "fund_assets",
+          "tableTo": "monthly_snapshots",
+          "columnsFrom": [
+            "snapshot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "fund_assets_name_not_empty": {
+          "name": "fund_assets_name_not_empty",
+          "value": "length(trim(\"fund_assets\".\"name\")) > 0"
+        },
+        "fund_assets_category_check": {
+          "name": "fund_assets_category_check",
+          "value": "\"fund_assets\".\"category\" in ('us-nasdaq-100', 'us-sp-500', 'japan-market', 'europe-market', 'china-csi-500', 'china-csi-300', 'china-dividend-index', 'satellite-strategy', 'china-bonds', 'gold')"
+        },
+        "fund_assets_market_value_non_negative": {
+          "name": "fund_assets_market_value_non_negative",
+          "value": "typeof(\"fund_assets\".\"market_value_cents\") = 'integer' and \"fund_assets\".\"market_value_cents\" >= 0"
+        },
+        "fund_assets_monthly_investment_integer": {
+          "name": "fund_assets_monthly_investment_integer",
+          "value": "typeof(\"fund_assets\".\"cumulative_investment_cents\") = 'integer'"
+        }
+      }
+    },
+    "liabilities": {
+      "name": "liabilities",
+      "columns": {
+        "snapshot_id": {
+          "name": "snapshot_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "huabei_balance_cents": {
+          "name": "huabei_balance_cents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "liabilities_snapshot_id_monthly_snapshots_id_fk": {
+          "name": "liabilities_snapshot_id_monthly_snapshots_id_fk",
+          "tableFrom": "liabilities",
+          "tableTo": "monthly_snapshots",
+          "columnsFrom": [
+            "snapshot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "liabilities_huabei_balance_non_negative": {
+          "name": "liabilities_huabei_balance_non_negative",
+          "value": "typeof(\"liabilities\".\"huabei_balance_cents\") = 'integer' and \"liabilities\".\"huabei_balance_cents\" >= 0"
+        }
+      }
+    },
+    "monthly_snapshots": {
+      "name": "monthly_snapshots",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "month": {
+          "name": "month",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "income_cents": {
+          "name": "income_cents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expense_cents": {
+          "name": "expense_cents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "investment_loss_cents": {
+          "name": "investment_loss_cents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "investment_contribution_cents": {
+          "name": "investment_contribution_cents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "monthly_snapshots_month_unique": {
+          "name": "monthly_snapshots_month_unique",
+          "columns": [
+            "month"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "monthly_snapshots_month_check": {
+          "name": "monthly_snapshots_month_check",
+          "value": "length(\"monthly_snapshots\".\"month\") = 7\n        and \"monthly_snapshots\".\"month\" glob '[0-9][0-9][0-9][0-9]-[0-1][0-9]'\n        and cast(substr(\"monthly_snapshots\".\"month\", 6, 2) as integer) between 1 and 12"
+        },
+        "monthly_snapshots_income_non_negative": {
+          "name": "monthly_snapshots_income_non_negative",
+          "value": "typeof(\"monthly_snapshots\".\"income_cents\") = 'integer' and \"monthly_snapshots\".\"income_cents\" >= 0"
+        },
+        "monthly_snapshots_expense_non_negative": {
+          "name": "monthly_snapshots_expense_non_negative",
+          "value": "typeof(\"monthly_snapshots\".\"expense_cents\") = 'integer' and \"monthly_snapshots\".\"expense_cents\" >= 0"
+        },
+        "monthly_snapshots_investment_loss_non_negative": {
+          "name": "monthly_snapshots_investment_loss_non_negative",
+          "value": "typeof(\"monthly_snapshots\".\"investment_loss_cents\") = 'integer' and \"monthly_snapshots\".\"investment_loss_cents\" >= 0"
+        },
+        "monthly_snapshots_investment_contribution_integer": {
+          "name": "monthly_snapshots_investment_contribution_integer",
+          "value": "typeof(\"monthly_snapshots\".\"investment_contribution_cents\") = 'integer'"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

@@ -6,17 +6,21 @@ export function canAddFund(currentCount: number) {
   return currentCount < MAX_FUNDS;
 }
 
+export function formatMonthlyInvestmentLabel(month: string) {
+  return `${Number(month.slice(5))}月净投入`;
+}
+
 export function createFundTemplate(
   month: string,
   snapshots: ReadonlyArray<MonthlySnapshot>,
-): MonthlySnapshot["funds"] {
+) {
   const previousSnapshot = snapshots.findLast(
     (snapshot) => snapshot.month < month,
   );
 
   return (previousSnapshot?.funds ?? []).map((fund) => ({
     ...fund,
-    monthlyInvestmentCents: 0,
+    marketValueCents: null,
   }));
 }
 
@@ -34,9 +38,11 @@ export const initialMonthlySnapshotFormState: MonthlySnapshotFormState = {
 };
 
 export function formatCentsAsYuan(cents: number) {
-  const yuan = Math.floor(cents / 100);
-  const remainder = cents % 100;
+  const sign = cents < 0 ? "-" : "";
+  const absoluteCents = Math.abs(cents);
+  const yuan = Math.floor(absoluteCents / 100);
+  const remainder = absoluteCents % 100;
   return remainder === 0
-    ? String(yuan)
-    : `${yuan}.${String(remainder).padStart(2, "0")}`;
+    ? `${sign}${yuan}`
+    : `${sign}${yuan}.${String(remainder).padStart(2, "0")}`;
 }

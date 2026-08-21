@@ -179,12 +179,16 @@ export function calculateMonthlyReview(snapshot: MonthlySnapshotInput) {
 
   const incomeCents = BigInt(snapshot.cashFlow.incomeCents);
   const expenseCents = BigInt(snapshot.cashFlow.expenseCents);
+  const investmentProfitLossCents = BigInt(
+    snapshot.cashFlow.investmentProfitLossCents,
+  );
   const liabilityCents = BigInt(snapshot.liabilities.huabeiBalanceCents);
 
   return {
     cashFlow: {
       incomeCents,
       expenseCents,
+      investmentProfitLossCents,
       investmentContributionCents,
       balanceCents: incomeCents - expenseCents - investmentContributionCents,
     },

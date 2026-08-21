@@ -6,6 +6,10 @@ import { MAX_FUNDS } from "@/features/monthly-snapshots/form-model";
 import type { MonthlySnapshotInput } from "@/features/monthly-snapshots/repository";
 
 const MONEY_ERROR = "请输入不小于 0 的金额，最多保留两位小数";
+const PROFIT_LOSS_ERROR =
+  "请输入金额，收益填正数、亏损填负数，最多保留两位小数";
+const NET_CONTRIBUTION_ERROR =
+  "请输入金额，申购填正数、赎回填负数，最多保留两位小数";
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 const categoryIds = new Set<string>(INVESTMENT_CATEGORY_IDS);
 
@@ -22,6 +26,13 @@ export function resolveSelectedMonth(
     : currentMonth;
 }
 
+export function shiftMonth(month: string, offset: number) {
+  const [year, monthNumber] = month.split("-").map(Number);
+  const shiftedDate = new Date(Date.UTC(year, monthNumber - 1 + offset, 1));
+
+  return `${shiftedDate.getUTCFullYear()}-${String(shiftedDate.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
 function stringValue(formData: FormData, field: string) {
   const value = formData.get(field);
   return typeof value === "string" ? value.trim() : "";
@@ -34,6 +45,17 @@ function parseYuan(value: string) {
   const cents =
     BigInt(match[1]) * BigInt(100) + BigInt((match[2] ?? "").padEnd(2, "0"));
   return cents <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(cents) : null;
+}
+
+function parseSignedYuan(value: string) {
+  const match = /^(-?)(0|[1-9]\d*)(?:\.(\d{1,2}))?$/.exec(value);
+  if (!match) return null;
+
+  const absoluteCents =
+    BigInt(match[2]) * BigInt(100) + BigInt((match[3] ?? "").padEnd(2, "0"));
+  if (absoluteCents > BigInt(Number.MAX_SAFE_INTEGER)) return null;
+
+  return Number(match[1] === "-" ? -absoluteCents : absoluteCents);
 }
 
 function isInvestmentCategory(value: string): value is InvestmentCategoryId {
@@ -73,6 +95,13 @@ export function parseMonthlySnapshotFormData(formData: FormData): ParseResult {
     else parsedMoney[field] = cents;
   }
 
+  const investmentProfitLoss = parseSignedYuan(
+    stringValue(formData, "investmentProfitLoss"),
+  );
+  if (investmentProfitLoss === null) {
+    errors.investmentProfitLoss = PROFIT_LOSS_ERROR;
+  }
+
   const fundCountValue = stringValue(formData, "fundCount");
   const fundCount = Number(fundCountValue);
   const fundCountIsValid =
@@ -93,7 +122,7 @@ export function parseMonthlySnapshotFormData(formData: FormData): ParseResult {
     const marketValue = parseYuan(
       stringValue(formData, `${prefix}.marketValue`),
     );
-    const monthlyInvestment = parseYuan(
+    const monthlyInvestment = parseSignedYuan(
       stringValue(formData, `${prefix}.monthlyInvestment`),
     );
 
@@ -102,7 +131,7 @@ export function parseMonthlySnapshotFormData(formData: FormData): ParseResult {
       errors[`${prefix}.category`] = "请选择有效分类";
     if (marketValue === null) errors[`${prefix}.marketValue`] = MONEY_ERROR;
     if (monthlyInvestment === null)
-      errors[`${prefix}.monthlyInvestment`] = MONEY_ERROR;
+      errors[`${prefix}.monthlyInvestment`] = NET_CONTRIBUTION_ERROR;
 
     if (
       name &&
@@ -123,8 +152,11 @@ export function parseMonthlySnapshotFormData(formData: FormData): ParseResult {
     (total, fund) => total + BigInt(fund.monthlyInvestmentCents),
     BigInt(0),
   );
-  if (investmentContribution > BigInt(Number.MAX_SAFE_INTEGER)) {
-    errors.fundInvestmentTotal = "本月投入合计金额过大";
+  if (
+    investmentContribution > BigInt(Number.MAX_SAFE_INTEGER) ||
+    investmentContribution < BigInt(Number.MIN_SAFE_INTEGER)
+  ) {
+    errors.fundInvestmentTotal = "本月净投入合计金额过大";
   }
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
@@ -136,6 +168,7 @@ export function parseMonthlySnapshotFormData(formData: FormData): ParseResult {
       cashFlow: {
         incomeCents: parsedMoney.income,
         expenseCents: parsedMoney.expense,
+        investmentProfitLossCents: investmentProfitLoss ?? 0,
         investmentContributionCents: Number(investmentContribution),
       },
       cash: {

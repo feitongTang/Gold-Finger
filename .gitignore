@@ -7,10 +7,28 @@ coverage/
 .env*
 !.env.example
 
-# Local SQLite data
-data/*.db*
-data/*.sqlite*
-data/*.sqlite3*
+# Local personal and financial data
+data/
+private/
+personal-data/
+imports/
+exports/
+statements/
+receipts/
+backups/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.csv
+*.tsv
+*.xls
+*.xlsx
+*.ofx
+*.qfx
+*.qif
 
 # Tooling
 *.tsbuildinfo

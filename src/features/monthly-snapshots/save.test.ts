@@ -10,6 +10,7 @@ function snapshotFormData(expense = "8000") {
   formData.set("month", "2026-08");
   formData.set("income", "25000");
   formData.set("expense", expense);
+  formData.set("investmentProfitLoss", "358.42");
   formData.set("emergencyFund", "50000");
   formData.set("goalFund", "20000");
   formData.set("dailyCash", "8000");

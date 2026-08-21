@@ -89,6 +89,9 @@ export const monthlySnapshots = sqliteTable(
     month: text("month").notNull().unique(),
     incomeCents: integer("income_cents").notNull(),
     expenseCents: integer("expense_cents").notNull(),
+    investmentProfitLossCents: integer("investment_loss_cents")
+      .notNull()
+      .default(0),
     investmentContributionCents: integer(
       "investment_contribution_cents",
     ).notNull(),
@@ -109,8 +112,12 @@ export const monthlySnapshots = sqliteTable(
       sql`typeof(${table.expenseCents}) = 'integer' and ${table.expenseCents} >= 0`,
     ),
     check(
-      "monthly_snapshots_investment_contribution_non_negative",
-      sql`typeof(${table.investmentContributionCents}) = 'integer' and ${table.investmentContributionCents} >= 0`,
+      "monthly_snapshots_investment_profit_loss_integer",
+      sql`typeof(${table.investmentProfitLossCents}) = 'integer'`,
+    ),
+    check(
+      "monthly_snapshots_investment_contribution_integer",
+      sql`typeof(${table.investmentContributionCents}) = 'integer'`,
     ),
   ],
 );
@@ -164,8 +171,8 @@ export const fundAssets = sqliteTable(
       sql`typeof(${table.marketValueCents}) = 'integer' and ${table.marketValueCents} >= 0`,
     ),
     check(
-      "fund_assets_cumulative_investment_non_negative",
-      sql`typeof(${table.monthlyInvestmentCents}) = 'integer' and ${table.monthlyInvestmentCents} >= 0`,
+      "fund_assets_monthly_investment_integer",
+      sql`typeof(${table.monthlyInvestmentCents}) = 'integer'`,
     ),
   ],
 );

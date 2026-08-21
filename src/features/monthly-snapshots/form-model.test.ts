@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import * as formModel from "@/features/monthly-snapshots/form-model";
-import { canAddFund } from "@/features/monthly-snapshots/form-model";
+import {
+  canAddFund,
+  createFundTemplate,
+  formatCentsAsYuan,
+  formatMonthlyInvestmentLabel,
+} from "@/features/monthly-snapshots/form-model";
 import type { MonthlySnapshot } from "@/features/monthly-snapshots/repository";
 
 function snapshot(
@@ -15,6 +19,7 @@ function snapshot(
     cashFlow: {
       incomeCents: 0,
       expenseCents: 0,
+      investmentProfitLossCents: 0,
       investmentContributionCents: 0,
     },
     cash: {
@@ -28,20 +33,20 @@ function snapshot(
 }
 
 describe("monthly snapshot form model", () => {
+  it("formats a negative contribution for editing without losing cents", () => {
+    expect(formatCentsAsYuan(-120_008)).toBe("-1200.08");
+  });
+
   it("allows adding funds below the limit and stops at the limit", () => {
     expect(canAddFund(49)).toBe(true);
     expect(canAddFund(50)).toBe(false);
   });
 
-  it("prefills a new month from the closest earlier fund holdings and resets monthly investment", () => {
-    const createFundTemplate = (
-      formModel as unknown as {
-        createFundTemplate?: (
-          month: string,
-          snapshots: MonthlySnapshot[],
-        ) => MonthlySnapshot["funds"];
-      }
-    ).createFundTemplate;
+  it("labels fund net investment with the selected calendar month", () => {
+    expect(formatMonthlyInvestmentLabel("2026-02")).toBe("2月净投入");
+  });
+
+  it("prefills a new month from the closest earlier fund holdings, reuses net investment, and leaves market value blank", () => {
     const juneFund: MonthlySnapshot["funds"][number] = {
       name: "黄金 ETF",
       category: "gold",
@@ -56,11 +61,16 @@ describe("monthly snapshot form model", () => {
     };
 
     expect(
-      createFundTemplate?.("2026-09", [
+      createFundTemplate("2026-09", [
         snapshot(3, "2026-10", []),
         snapshot(1, "2026-06", [juneFund]),
         snapshot(2, "2026-08", [augustFund]),
       ]),
-    ).toEqual([{ ...augustFund, monthlyInvestmentCents: 0 }]);
+    ).toEqual([
+      {
+        ...augustFund,
+        marketValueCents: null,
+      },
+    ]);
   });
 });

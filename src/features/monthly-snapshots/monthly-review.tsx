@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { InvestmentCategoryId } from "@/db/schema";
+import { shiftMonth } from "@/features/monthly-snapshots/form-data";
 import { InvestmentAllocation } from "@/features/monthly-snapshots/investment-allocation";
 import type { MonthlySnapshot } from "@/features/monthly-snapshots/repository";
 import {
@@ -48,6 +49,31 @@ function formatDelta(cents: bigint) {
   return `${prefix}${formatMoney(cents)}`;
 }
 
+function MonthSwitcher({ month }: { month: string }) {
+  const previousMonth = shiftMonth(month, -1);
+  const nextMonth = shiftMonth(month, 1);
+
+  return (
+    <nav aria-label="切换记录月份" className="month-switcher">
+      <Link
+        aria-label={`查看 ${previousMonth}`}
+        className="month-switcher-arrow"
+        href={`/?month=${previousMonth}`}
+      >
+        ‹
+      </Link>
+      <time dateTime={month}>{month}</time>
+      <Link
+        aria-label={`查看 ${nextMonth}`}
+        className="month-switcher-arrow"
+        href={`/?month=${nextMonth}`}
+      >
+        ›
+      </Link>
+    </nav>
+  );
+}
+
 export function MonthlyReview({
   month,
   snapshot,
@@ -59,11 +85,15 @@ export function MonthlyReview({
 }) {
   if (!snapshot) {
     return (
-      <section className="review-empty" aria-labelledby="review-title">
-        <div>
-          <p className="review-eyebrow">月度复盘</p>
-          <h2 id="review-title">{formatMonth(month)}暂无复盘结果</h2>
-          <p>保存这个月份的财务记录后，资金分配与资产结构会显示在这里。</p>
+      <section className="review-panel" aria-labelledby="review-title">
+        <div className="review-empty-heading">
+          <p className="review-eyebrow">{formatMonth(month)}月度复盘</p>
+          <h2 id="review-title">本月结果</h2>
+        </div>
+        <MonthSwitcher month={month} />
+        <div className="review-empty-message">
+          <h3>暂无复盘结果</h3>
+          <p>新建这个月份的财务记录后，资金分配与资产结构会显示在这里。</p>
         </div>
       </section>
     );
@@ -79,7 +109,6 @@ export function MonthlyReview({
     review.investmentCategories,
     categories,
   );
-
   return (
     <section className="review-panel" aria-labelledby="review-title">
       <div className="review-heading">
@@ -93,10 +122,12 @@ export function MonthlyReview({
         </div>
       </div>
 
+      <MonthSwitcher month={month} />
+
       <div className="review-section" aria-labelledby="cash-flow-review-title">
         <div className="review-section-heading">
           <h3 id="cash-flow-review-title">资金分配</h3>
-          <p>月度结余 = 收入 − 支出 − 投资投入</p>
+          <p>月度结余已扣除基金明细中的投资净投入</p>
         </div>
         <dl className="metric-grid">
           <div className="metric-card">
@@ -106,10 +137,6 @@ export function MonthlyReview({
           <div className="metric-card">
             <dt>支出</dt>
             <dd>{formatMoney(review.cashFlow.expenseCents)}</dd>
-          </div>
-          <div className="metric-card">
-            <dt>投资投入</dt>
-            <dd>{formatMoney(review.cashFlow.investmentContributionCents)}</dd>
           </div>
           <div
             className={`metric-card metric-card-emphasis ${review.cashFlow.balanceCents < BigInt(0) ? "metric-card-negative" : ""}`}
@@ -145,6 +172,25 @@ export function MonthlyReview({
               {allocation.liabilityPercent === null
                 ? "无资产基数"
                 : `相当于总资产的 ${allocation.liabilityPercent}%`}
+            </dd>
+          </div>
+          <div
+            className={`asset-summary-card ${
+              review.cashFlow.investmentProfitLossCents > BigInt(0)
+                ? "asset-summary-profit"
+                : review.cashFlow.investmentProfitLossCents < BigInt(0)
+                  ? "asset-summary-loss"
+                  : ""
+            }`}
+          >
+            <dt>投资损益</dt>
+            <dd>{formatDelta(review.cashFlow.investmentProfitLossCents)}</dd>
+            <dd className="asset-ratio">
+              {review.cashFlow.investmentProfitLossCents > BigInt(0)
+                ? "本月投资收益"
+                : review.cashFlow.investmentProfitLossCents < BigInt(0)
+                  ? "本月投资亏损"
+                  : "本月投资持平"}
             </dd>
           </div>
         </dl>

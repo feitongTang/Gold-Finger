@@ -1,6 +1,6 @@
 # Project
 
-Gold-Finger 是本地单用户的月度财务复盘 MVP。产品范围以 `PROJECT.md` 为准。技术栈为 Node.js 24、npm、Next.js App Router、React、严格 TypeScript、Tailwind CSS、SQLite/Drizzle 和 Vitest。
+Gold-Finger 是本地单用户的月度财务复盘 MVP。产品范围以 `docs/product-scope.md` 为准。技术栈为 Node.js 24、npm、Next.js App Router、React、严格 TypeScript、Tailwind CSS、SQLite/Drizzle 和 Vitest。
 
 # Structure
 

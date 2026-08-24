@@ -1,7 +1,7 @@
 .next
 coverage
-docs/superpowers
+docs/designs
+docs/plans
 drizzle/meta
 node_modules
 package-lock.json
-PROJECT.md

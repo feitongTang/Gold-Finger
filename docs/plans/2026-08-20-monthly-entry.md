@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node.js 24, Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS/CSS, SQLite/Drizzle, Vitest.
 
-**Spec:** `docs/superpowers/specs/2026-08-20-monthly-entry-design.md`
+**Spec:** `docs/designs/2026-08-20-monthly-entry-design.md`
 
 ## Global Constraints
 

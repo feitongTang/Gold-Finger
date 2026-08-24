@@ -4,7 +4,7 @@ Gold-Finger 是一个面向个人的月度财务复盘工具，用于低频记�
 
 ## 项目状态
 
-仓库当前已实现 MVP 月度闭环：首次资产录入、月度更新、复盘结果、固定投资分类汇总和历史趋势。当前 MVP 仅面向桌面端，手机端适配不在范围内。产品范围见 `PROJECT.md`，开发状态见 `TASKS.md`，人工验收记录见 `docs/MVP_ACCEPTANCE.md`。
+仓库当前已实现 MVP 月度闭环：首次资产录入、月度更新、复盘结果、固定投资分类汇总和历史趋势。当前 MVP 仅面向桌面端，手机端适配不在范围内。详细信息见[产品范围](docs/product-scope.md)、[MVP Backlog](docs/mvp-backlog.md) 和[人工验收记录](docs/mvp-acceptance.md)。
 
 第一版是本地单用户应用，不包含登录、云同步或远程服务。默认数据文件位于 `data/gold-finger.db`，该目录下的数据库文件不会提交到 Git。
 
@@ -45,6 +45,8 @@ npm run dev
 ```
 
 访问 [http://localhost:3000](http://localhost:3000)。默认配置不含密钥；如需更换本地数据库位置，可修改 `.env.local` 中的 `DATABASE_FILE`。
+
+macOS 用户完成依赖安装和环境配置后，也可以双击项目根目录下的 `Gold-Finger.command`。普通模式与 Demo 模式的双击入口分别为 `Gold-Finger.command` 和 `Gold-Finger-Demo.command`。
 
 如需以生产模式运行：
 
@@ -116,18 +118,36 @@ npm run start
 ## 项目结构
 
 ```text
-src/app/     Next.js 路由、布局和路由级界面
-src/db/      SQLite 连接和数据库结构
-src/features 按业务能力纵向组织的功能
-src/lib/     仅在确有共享需求时放置纯 TypeScript 工具
-drizzle/     生成并提交的 SQL 迁移
+Gold-Finger/
+├── README.md                  项目介绍、使用说明与数据安全指南
+├── CONTRIBUTING.md            开发和贡献约定
+├── LICENSE                    MIT 许可证
+├── Gold-Finger.command        macOS 普通模式启动器
+├── Gold-Finger-Demo.command   macOS Demo 模式启动器
+├── docs/
+│   ├── product-scope.md       产品目标、MVP 范围与验收标准
+│   ├── mvp-backlog.md         MVP 开发任务与完成状态
+│   ├── mvp-acceptance.md      人工验收记录
+│   ├── designs/               已确认的设计记录
+│   └── plans/                 历史实施计划
+├── drizzle/                   生成并审阅后的 SQL 迁移
+├── scripts/                   仓库级启动工具及其测试
+└── src/
+    ├── app/                   Next.js 路由、布局和路由级界面
+    ├── db/                    SQLite 连接与数据库 schema
+    └── features/              按业务能力纵向组织的功能
+        ├── demo/              公开演示数据
+        ├── monthly-snapshots/ 月度记录、计算、持久化与界面
+        └── theme/             主题配置与切换
 ```
 
-目录仅在有实际内容时创建；业务代码优先放在所属 feature 中，跨功能工具只在确有共享需求时进入 `src/lib`。
+目录仅在有实际内容时创建；业务代码优先放在所属 feature 中，跨功能工具只在确有共享需求时进入 `src/lib`。仓库级脚本放在根目录 `scripts`，不与应用源代码混放。
 
-## 本地数据与备份
+## 数据隐私、备份与恢复
 
 默认数据库文件是项目根目录下的 `data/gold-finger.db`。如果 `.env.local` 中设置了 `DATABASE_FILE`，应用会改用该位置；相对路径从项目根目录解析。Git 默认忽略 `data` 目录下常见的 `.db`、`.sqlite` 和 `.sqlite3` 数据库及其伴生文件。自定义数据库应放在项目目录之外；如必须放在项目内且使用其他文件名，请先把对应路径加入 `.gitignore` 或本机的 `.git/info/exclude`，避免真实财务数据被提交。
+
+Gold-Finger 不包含登录、云同步或远程财务服务。数据默认只保存在本机，但使用者仍需自行保护数据库文件、备份和设备访问权限。提交 Issue 或 Pull Request 时，请勿附带真实数据库、账单、截图或可识别个人财务状况的信息。
 
 演示数据库固定为 `data/gold-finger-demo.db`，由 `npm run dev:demo` 自动重建。不要把个人数据写入 `src/features/demo/demo-data.ts`；该文件会随公开仓库提交。
 
@@ -169,3 +189,11 @@ npm run dev
 - 浏览器端代码不得导入数据库模块。
 - 财务计算保持为无框架依赖的纯 TypeScript 函数。
 - 新功能优先放在对应 feature 内，不为尚未出现的需求添加通用层或依赖。
+
+## 参与贡献
+
+环境准备、项目边界、数据库迁移和提交前检查见 [CONTRIBUTING.md](CONTRIBUTING.md)。提出改动前请先确认它符合当前产品范围，并确保不包含任何真实财务数据。
+
+## 许可证
+
+Gold-Finger 使用 [MIT License](LICENSE)。

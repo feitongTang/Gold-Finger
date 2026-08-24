@@ -14,7 +14,7 @@ import { spawnSync } from "node:child_process";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-const sourceScript = join(process.cwd(), "src/scripts/start-demo.mjs");
+const sourceScript = join(process.cwd(), "scripts/start-demo.mjs");
 const temporaryDirectories: string[] = [];
 
 afterEach(() => {

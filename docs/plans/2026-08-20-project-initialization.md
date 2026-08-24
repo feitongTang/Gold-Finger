@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node.js 24 LTS, npm, Next.js, React, strict TypeScript, Tailwind CSS, SQLite, Drizzle ORM/Kit, ESLint, Prettier, Vitest
 
-**Spec:** `docs/superpowers/specs/2026-08-20-project-initialization-design.md`
+**Spec:** `docs/designs/2026-08-20-project-initialization-design.md`
 
 ## Global Constraints
 

@@ -14,7 +14,7 @@ The first version is a single-user, local-first application centered on monthly 
 - Use npm and commit `package-lock.json` for reproducible installs.
 - Target Node.js 24 LTS. The local machine already provides Node.js 24, and Next.js supports the App Router on current supported Node.js releases.
 - Use SQLite for local persistence and Drizzle ORM plus Drizzle Kit for typed access and checked-in migrations. Use stable package releases only, not release candidates.
-- Use Tailwind CSS for the small responsive UI surface because it is part of the standard Next.js toolchain; do not add a component library during initialization.
+- Use Tailwind CSS for the small desktop-oriented UI surface because it is part of the standard Next.js toolchain; do not add a component library during initialization.
 - Use ESLint, Prettier, TypeScript, and Vitest. Add React Testing Library only if the initial shell test exercises rendered UI; otherwise keep the base test focused on framework-independent project code.
 
 The durable decision is local SQLite storage. Moving to multi-device hosting later would require a database migration and authentication, but neither is part of the current product goal.

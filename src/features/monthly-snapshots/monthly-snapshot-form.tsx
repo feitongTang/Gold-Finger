@@ -178,7 +178,11 @@ export function MonthlySnapshotForm({
 
   return (
     <>
-      <section className="entry-toggle-panel" aria-labelledby="entry-title">
+      <section
+        className="entry-toggle-panel"
+        aria-labelledby="entry-title"
+        id="monthly-entry"
+      >
         <div>
           <h2 id="entry-title">月度记录</h2>
           <p>{snapshot ? "本月已有数据，可按需修改。" : "本月还没有数据。"}</p>
@@ -186,7 +190,7 @@ export function MonthlySnapshotForm({
         <button
           aria-controls="monthly-entry-form"
           aria-expanded={isOpen}
-          className="primary-button entry-toggle-button"
+          className={`primary-button entry-toggle-button${isOpen ? " entry-toggle-button-open" : ""}`}
           onClick={() => setIsOpen((current) => !current)}
           type="button"
         >

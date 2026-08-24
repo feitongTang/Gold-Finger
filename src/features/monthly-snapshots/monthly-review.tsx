@@ -49,6 +49,12 @@ function formatDelta(cents: bigint) {
   return `${prefix}${formatMoney(cents)}`;
 }
 
+function amountDirection(cents: bigint) {
+  if (cents > BigInt(0)) return "positive";
+  if (cents < BigInt(0)) return "negative";
+  return "neutral";
+}
+
 function MonthSwitcher({ month }: { month: string }) {
   const previousMonth = shiftMonth(month, -1);
   const nextMonth = shiftMonth(month, 1);
@@ -85,15 +91,32 @@ export function MonthlyReview({
 }) {
   if (!snapshot) {
     return (
-      <section className="review-panel" aria-labelledby="review-title">
-        <div className="review-empty-heading">
-          <p className="review-eyebrow">{formatMonth(month)}月度复盘</p>
-          <h2 id="review-title">本月结果</h2>
+      <section
+        className="review-panel review-panel-empty"
+        aria-labelledby="review-title"
+      >
+        <div className="review-heading">
+          <div>
+            <p className="review-eyebrow">{formatMonth(month)}月度复盘</p>
+            <h2 id="review-title">本月结果</h2>
+          </div>
+          <div className="net-worth-summary net-worth-summary-empty">
+            <span>当前净资产</span>
+            <strong aria-label="当前净资产尚未记录">—</strong>
+          </div>
         </div>
         <MonthSwitcher month={month} />
         <div className="review-empty-message">
+          <span className="review-empty-icon" aria-hidden="true">
+            <svg fill="none" viewBox="0 0 32 32">
+              <path d="M10 4.75h9l5 5v17.5H10z" />
+              <path d="M19 4.75v5h5M13.75 21.25h6.5M13.75 16.75l2-2 2 1.5 3-3" />
+            </svg>
+          </span>
           <h3>暂无复盘结果</h3>
-          <p>新建这个月份的财务记录后，资金分配与资产结构会显示在这里。</p>
+          <p>
+            请在下方新建这个月份的财务记录，资金分配与资产结构会显示在这里。
+          </p>
         </div>
       </section>
     );
@@ -124,85 +147,114 @@ export function MonthlyReview({
 
       <MonthSwitcher month={month} />
 
-      <div className="review-section" aria-labelledby="cash-flow-review-title">
-        <div className="review-section-heading">
-          <h3 id="cash-flow-review-title">资金分配</h3>
-          <p>月度结余已扣除基金明细中的投资净投入</p>
+      <div className="review-overview-grid">
+        <div
+          className="review-section"
+          aria-labelledby="cash-flow-review-title"
+        >
+          <div className="review-section-heading">
+            <h3 id="cash-flow-review-title">资金分配</h3>
+            <p>月度结余已扣除基金明细中的投资净投入</p>
+          </div>
+          <dl className="metric-grid">
+            <div className="metric-card">
+              <dt>收入</dt>
+              <dd>{formatMoney(review.cashFlow.incomeCents)}</dd>
+            </div>
+            <div className="metric-card">
+              <dt>支出</dt>
+              <dd>{formatMoney(review.cashFlow.expenseCents)}</dd>
+            </div>
+            <div className="metric-card metric-card-emphasis">
+              <dt>月度结余</dt>
+              <dd
+                className={`metric-card-${amountDirection(review.cashFlow.balanceCents)}`}
+              >
+                {formatDelta(review.cashFlow.balanceCents)}
+              </dd>
+            </div>
+          </dl>
         </div>
-        <dl className="metric-grid">
-          <div className="metric-card">
-            <dt>收入</dt>
-            <dd>{formatMoney(review.cashFlow.incomeCents)}</dd>
-          </div>
-          <div className="metric-card">
-            <dt>支出</dt>
-            <dd>{formatMoney(review.cashFlow.expenseCents)}</dd>
-          </div>
-          <div
-            className={`metric-card metric-card-emphasis ${review.cashFlow.balanceCents < BigInt(0) ? "metric-card-negative" : ""}`}
-          >
-            <dt>月度结余</dt>
-            <dd>{formatMoney(review.cashFlow.balanceCents)}</dd>
-          </div>
-        </dl>
-      </div>
 
-      <div className="review-section" aria-labelledby="asset-review-title">
-        <div className="review-section-heading">
-          <h3 id="asset-review-title">资产结构</h3>
-          <p>净资产 = 现金 + 投资 − 负债</p>
-        </div>
-        <dl className="asset-summary-grid">
-          <div className="asset-summary-card">
-            <dt>现金</dt>
-            <dd>{formatMoney(review.assets.cashCents)}</dd>
-            <dd className="asset-ratio">占总资产 {allocation.cashPercent}%</dd>
+        <div className="review-section" aria-labelledby="asset-review-title">
+          <div className="review-section-heading">
+            <h3 id="asset-review-title">资产结构</h3>
+            <p>净资产 = 现金 + 投资 − 负债</p>
           </div>
-          <div className="asset-summary-card">
-            <dt>投资</dt>
-            <dd>{formatMoney(review.assets.investmentCents)}</dd>
-            <dd className="asset-ratio">
-              占总资产 {allocation.investmentPercent}%
-            </dd>
-          </div>
-          <div className="asset-summary-card asset-summary-liability">
-            <dt>负债</dt>
-            <dd>{formatMoney(review.assets.liabilityCents)}</dd>
-            <dd className="asset-ratio">
-              {allocation.liabilityPercent === null
-                ? "无资产基数"
-                : `相当于总资产的 ${allocation.liabilityPercent}%`}
-            </dd>
-          </div>
-          <div
-            className={`asset-summary-card ${
-              review.cashFlow.investmentProfitLossCents > BigInt(0)
-                ? "asset-summary-profit"
-                : review.cashFlow.investmentProfitLossCents < BigInt(0)
-                  ? "asset-summary-loss"
-                  : ""
-            }`}
-          >
-            <dt>投资损益</dt>
-            <dd>{formatDelta(review.cashFlow.investmentProfitLossCents)}</dd>
-            <dd className="asset-ratio">
-              {review.cashFlow.investmentProfitLossCents > BigInt(0)
-                ? "本月投资收益"
-                : review.cashFlow.investmentProfitLossCents < BigInt(0)
-                  ? "本月投资亏损"
-                  : "本月投资持平"}
-            </dd>
-          </div>
-        </dl>
-        <div className="asset-bar" aria-hidden="true">
-          <span
-            className="asset-bar-cash"
-            style={{ width: `${allocation.cashPercent}%` }}
-          />
-          <span
-            className="asset-bar-investment"
-            style={{ width: `${allocation.investmentPercent}%` }}
-          />
+          <dl className="asset-summary-grid">
+            <div className="asset-summary-card">
+              <dt>现金</dt>
+              <dd>{formatMoney(review.assets.cashCents)}</dd>
+              <dd className="asset-ratio">
+                占总资产 {allocation.cashPercent}%
+              </dd>
+            </div>
+            <div className="asset-summary-card">
+              <dt>投资</dt>
+              <dd>{formatMoney(review.assets.investmentCents)}</dd>
+              <dd className="asset-ratio">
+                占总资产 {allocation.investmentPercent}%
+              </dd>
+            </div>
+            <div className="asset-summary-card asset-summary-liability">
+              <dt>负债</dt>
+              <dd>{formatMoney(review.assets.liabilityCents)}</dd>
+              <dd className="asset-ratio">
+                {allocation.liabilityPercent === null
+                  ? "无资产基数"
+                  : `相当于总资产的 ${allocation.liabilityPercent}%`}
+              </dd>
+            </div>
+            <div
+              className={`asset-summary-card ${
+                review.cashFlow.investmentProfitLossCents > BigInt(0)
+                  ? "asset-summary-profit"
+                  : review.cashFlow.investmentProfitLossCents < BigInt(0)
+                    ? "asset-summary-loss"
+                    : ""
+              }`}
+            >
+              <dt>投资损益</dt>
+              <dd>{formatDelta(review.cashFlow.investmentProfitLossCents)}</dd>
+              <dd className="asset-ratio">
+                {review.cashFlow.investmentProfitLossCents > BigInt(0)
+                  ? "本月投资收益"
+                  : review.cashFlow.investmentProfitLossCents < BigInt(0)
+                    ? "本月投资亏损"
+                    : "本月投资持平"}
+              </dd>
+            </div>
+          </dl>
+          <figure className="asset-composition">
+            <figcaption>
+              <strong>总资产构成</strong>
+              <span>按现金与投资的当前市值计算</span>
+            </figcaption>
+            <div
+              aria-label={`总资产中现金占 ${allocation.cashPercent}%，投资占 ${allocation.investmentPercent}%`}
+              className="asset-bar"
+              role="img"
+            >
+              <span
+                className="asset-bar-cash"
+                style={{ width: `${allocation.cashPercent}%` }}
+              />
+              <span
+                className="asset-bar-investment"
+                style={{ width: `${allocation.investmentPercent}%` }}
+              />
+            </div>
+            <ul className="asset-legend" aria-label="总资产构成图例">
+              <li>
+                <span className="asset-legend-swatch asset-legend-cash" />
+                现金 <strong>{allocation.cashPercent}%</strong>
+              </li>
+              <li>
+                <span className="asset-legend-swatch asset-legend-investment" />
+                投资 <strong>{allocation.investmentPercent}%</strong>
+              </li>
+            </ul>
+          </figure>
         </div>
       </div>
 
@@ -280,16 +332,23 @@ export function MonthlyHistory({
                         {formatMonth(point.month)}
                       </Link>
                     </th>
-                    {metrics.map(([value, previousValue], metricIndex) => (
-                      <td key={metricIndex}>
-                        <strong>{formatMoney(value)}</strong>
-                        <span>
-                          {previousValue === undefined
-                            ? "起始记录"
-                            : `较上次 ${formatDelta(value - previousValue)}`}
-                        </span>
-                      </td>
-                    ))}
+                    {metrics.map(([value, previousValue], metricIndex) => {
+                      const delta =
+                        previousValue === undefined
+                          ? null
+                          : value - previousValue;
+
+                      return (
+                        <td key={metricIndex}>
+                          <strong>{formatMoney(value)}</strong>
+                          <span
+                            className={`history-delta history-delta-${delta === null ? "neutral" : amountDirection(delta)}`}
+                          >
+                            {delta === null ? "起始记录" : formatDelta(delta)}
+                          </span>
+                        </td>
+                      );
+                    })}
                   </tr>
                 );
               })}

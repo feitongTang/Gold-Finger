@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a single responsive form that creates and edits complete monthly financial snapshots with clear validation and persistence feedback.
+**Goal:** Build a single desktop-oriented form that creates and edits complete monthly financial snapshots with clear validation and persistence feedback.
 
 **Architecture:** The page remains a Server Component that loads one month from SQLite and passes serializable defaults into a focused Client Component. A Server Action delegates untrusted `FormData` to a pure parser and a repository-backed save use case, preserving the existing database boundary and making behavior testable without a browser framework.
 
@@ -166,7 +166,7 @@ Expected: tests and strict type checking pass.
 
 ---
 
-### Task 4: Build the responsive accessible monthly form
+### Task 4: Build the accessible monthly form
 
 **Files:**
 - Create: `src/features/monthly-snapshots/monthly-snapshot-form.tsx`
@@ -194,9 +194,9 @@ const [state, formAction, pending] = useActionState(
 
 The add button appends one blank row. Each remove button has an explicit accessible label containing the fund position or name. Do not add animation, modal, autosave, or wizard state.
 
-- [ ] **Step 2: Add scoped responsive styling**
+- [ ] **Step 2: Add scoped desktop styling**
 
-Replace the placeholder hero rules with a restrained application shell, section cards, two-column desktop fields, fund grid, visible focus, error/success colors, disabled state, and a single-column breakpoint at `40rem`. Ensure inputs use `min-width: 0` and no page-level horizontal overflow at 320px.
+Replace the placeholder hero rules with a restrained application shell, section cards, two-column desktop fields, fund grid, visible focus, error/success colors, and disabled state. Keep the content width controlled for desktop use; mobile-specific breakpoints and narrow-screen overflow requirements are out of scope.
 
 - [ ] **Step 3: Run formatting, lint, and type checking**
 
@@ -254,9 +254,9 @@ Expected: every command exits 0 and the production build includes `/` without cr
 - Consumes: running local application and Task 2 acceptance criteria.
 - Produces: verified Task 2 status and clean scoped diff.
 
-- [ ] **Step 1: Run the app and inspect desktop and mobile**
+- [ ] **Step 1: Run the app and inspect the desktop flow**
 
-At approximately 1440px and 375px widths, verify empty form, existing-month load, fund add/remove, valid save, validation errors, pending feedback, retry/error presentation where practical, no horizontal overflow, tab order, visible focus, labels, and status announcements.
+At an approximately 1440px desktop width, verify empty form, existing-month load, fund add/remove, valid save, validation errors, pending feedback, retry/error presentation where practical, tab order, visible focus, labels, and status announcements.
 
 - [ ] **Step 2: Fix only issues directly found in Task 2**
 

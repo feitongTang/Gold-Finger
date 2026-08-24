@@ -4,7 +4,11 @@ import { join } from "node:path";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { openDatabase, openMigratedDatabase } from "@/db/client";
+import {
+  openDatabase,
+  openMigratedDatabase,
+  resolveApplicationDatabaseFile,
+} from "@/db/client";
 
 const openConnections: Array<ReturnType<typeof openDatabase>["sqlite"]> = [];
 const temporaryDirectories: string[] = [];
@@ -20,6 +24,27 @@ afterEach(() => {
 });
 
 describe("openDatabase", () => {
+  it("keeps demo mode isolated from the configured personal database", () => {
+    expect(
+      resolveApplicationDatabaseFile(
+        {
+          GOLD_FINGER_MODE: "demo",
+          DATABASE_FILE: "/private/personal-assets.db",
+        },
+        "/public/gold-finger",
+      ),
+    ).toBe("/public/gold-finger/data/gold-finger-demo.db");
+  });
+
+  it("uses the configured database outside demo mode", () => {
+    expect(
+      resolveApplicationDatabaseFile(
+        { DATABASE_FILE: "/private/personal-assets.db" },
+        "/public/gold-finger",
+      ),
+    ).toBe("/private/personal-assets.db");
+  });
+
   it("opens SQLite with foreign keys enabled", () => {
     const { sqlite } = openDatabase(":memory:");
     openConnections.push(sqlite);

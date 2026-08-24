@@ -158,7 +158,7 @@ Create a Chinese-language root layout with metadata title `Gold-Finger` and desc
 </main>
 ```
 
-Use `globals.css` for a minimal responsive centered layout, system fonts, a light neutral background, readable foreground contrast, and visible focus defaults. Do not add forms, sample financial values, navigation, charts, or client-side state.
+Use `globals.css` for a minimal desktop-oriented centered layout, system fonts, a light neutral background, readable foreground contrast, and visible focus defaults. Do not add forms, sample financial values, navigation, charts, or client-side state.
 
 - [ ] **Step 5: Verify the initial shell statically**
 

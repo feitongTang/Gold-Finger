@@ -1,10 +1,14 @@
-import { resolveSelectedMonth } from "@/features/monthly-snapshots/form-data";
+import {
+  resolveSelectedMonth,
+  shiftMonth,
+} from "@/features/monthly-snapshots/form-data";
 import { loadMonthlyEntry } from "@/features/monthly-snapshots/data";
 import {
   MonthlyHistory,
   MonthlyReview,
 } from "@/features/monthly-snapshots/monthly-review";
 import { MonthlySnapshotForm } from "@/features/monthly-snapshots/monthly-snapshot-form";
+import { ThemeSettings } from "@/features/theme/theme-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +28,11 @@ export default async function Home({
   const month = resolveSelectedMonth(requestedMonth, currentMonth());
   const { snapshot, fundTemplate, snapshots, categories } =
     loadMonthlyEntry(month);
+  const historyStartMonth = shiftMonth(month, -5);
+  const historySnapshots = snapshots.filter(
+    (snapshot) =>
+      snapshot.month >= historyStartMonth && snapshot.month <= month,
+  );
 
   return (
     <>
@@ -32,6 +41,7 @@ export default async function Home({
           <p className="brand">Gold-Finger</p>
           <span className="header-divider" aria-hidden="true" />
           <h1 className="header-context">月度财务记录</h1>
+          <ThemeSettings />
         </div>
       </header>
       <main className="page-content">
@@ -41,7 +51,7 @@ export default async function Home({
           snapshot={snapshot}
         />
 
-        <MonthlyHistory snapshots={snapshots} />
+        <MonthlyHistory snapshots={historySnapshots} />
 
         <MonthlySnapshotForm
           categories={categories}

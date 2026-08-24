@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "next dev --webpack",
+    "dev:demo": "node src/scripts/start-demo.mjs",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",

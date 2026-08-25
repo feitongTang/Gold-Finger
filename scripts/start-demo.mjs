@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
-const projectDirectory = resolve(scriptDirectory, "../..");
+const projectDirectory = resolve(scriptDirectory, "..");
 const demoDatabase = resolve(projectDirectory, "data/gold-finger-demo.db");
 
 for (const suffix of ["", "-shm", "-wal"]) {

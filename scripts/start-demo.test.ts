@@ -26,7 +26,7 @@ describe("demo start command", () => {
   it("resets only the demo database and starts Next in demo mode on port 3001", () => {
     const projectDirectory = mkdtempSync(join(tmpdir(), "gold-finger-demo-"));
     temporaryDirectories.push(projectDirectory);
-    const scriptDirectory = join(projectDirectory, "src", "scripts");
+    const scriptDirectory = join(projectDirectory, "scripts");
     const binDirectory = join(projectDirectory, "bin");
     const dataDirectory = join(projectDirectory, "data");
     mkdirSync(scriptDirectory, { recursive: true });

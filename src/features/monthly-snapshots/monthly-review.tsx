@@ -3,6 +3,10 @@ import Link from "next/link";
 import type { InvestmentCategoryId } from "@/db/schema";
 import { shiftMonth } from "@/features/monthly-snapshots/form-data";
 import { InvestmentAllocation } from "@/features/monthly-snapshots/investment-allocation";
+import {
+  MonthlyTrendCharts,
+  type SerializableMonthlyTrendPoint,
+} from "@/features/monthly-snapshots/monthly-trend-charts";
 import type { MonthlySnapshot } from "@/features/monthly-snapshots/repository";
 import {
   calculateAssetAllocation,
@@ -282,6 +286,15 @@ export function MonthlyHistory({
   snapshots: ReadonlyArray<MonthlySnapshot>;
 }) {
   const trend = calculateMonthlyTrend(snapshots);
+  const chartPoints: SerializableMonthlyTrendPoint[] = trend.map((point) => ({
+    month: point.month,
+    netWorthCents: String(point.netWorthCents),
+    cashCents: String(point.cashCents),
+    investmentCents: String(point.investmentCents),
+    liabilityCents: String(point.liabilityCents),
+    incomeCents: String(point.incomeCents),
+    expenseCents: String(point.expenseCents),
+  }));
 
   return (
     <section className="history-panel" aria-labelledby="history-title">
@@ -290,71 +303,85 @@ export function MonthlyHistory({
           <p className="review-eyebrow">历史趋势</p>
           <h2 id="history-title">月度变化</h2>
         </div>
-        <p>每行仅代表已保存月份；相邻记录可能跨月，不补齐缺失月份。</p>
       </div>
       {trend.length === 0 ? (
         <p className="history-empty">
           保存第一份月度记录后，这里会开始展示资产与现金流变化。
         </p>
       ) : (
-        <div
-          aria-label="月度财务趋势表，可横向滚动"
-          className="history-table-scroll"
-          role="region"
-          tabIndex={0}
-        >
-          <table className="history-table">
-            <thead>
-              <tr>
-                <th scope="col">月份</th>
-                <th scope="col">净资产</th>
-                <th scope="col">月度结余</th>
-                <th scope="col">现金资产</th>
-                <th scope="col">投资资产</th>
-                <th scope="col">负债</th>
-              </tr>
-            </thead>
-            <tbody>
-              {trend.map((point, index) => {
-                const previous = trend[index - 1];
-                const metrics = [
-                  [point.netWorthCents, previous?.netWorthCents],
-                  [point.cashFlowBalanceCents, previous?.cashFlowBalanceCents],
-                  [point.cashCents, previous?.cashCents],
-                  [point.investmentCents, previous?.investmentCents],
-                  [point.liabilityCents, previous?.liabilityCents],
-                ] as const;
-
-                return (
-                  <tr key={point.month}>
-                    <th scope="row">
-                      <Link href={`/?month=${point.month}`}>
-                        {formatMonth(point.month)}
-                      </Link>
-                    </th>
-                    {metrics.map(([value, previousValue], metricIndex) => {
-                      const delta =
-                        previousValue === undefined
-                          ? null
-                          : value - previousValue;
-
-                      return (
-                        <td key={metricIndex}>
-                          <strong>{formatMoney(value)}</strong>
-                          <span
-                            className={`history-delta history-delta-${delta === null ? "neutral" : amountDirection(delta)}`}
-                          >
-                            {delta === null ? "起始记录" : formatDelta(delta)}
-                          </span>
-                        </td>
-                      );
-                    })}
+        <>
+          <MonthlyTrendCharts points={chartPoints} />
+          <details className="history-table-details">
+            <summary>查看趋势数据</summary>
+            <div
+              aria-label="月度财务趋势数据表，可横向滚动"
+              className="history-table-scroll"
+              role="region"
+              tabIndex={0}
+            >
+              <table className="history-table">
+                <thead>
+                  <tr>
+                    <th scope="col">月份</th>
+                    <th scope="col">净资产</th>
+                    <th scope="col">收入</th>
+                    <th scope="col">支出</th>
+                    <th scope="col">月度结余</th>
+                    <th scope="col">现金资产</th>
+                    <th scope="col">投资资产</th>
+                    <th scope="col">负债</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                  {trend.map((point, index) => {
+                    const previous = trend[index - 1];
+                    const metrics = [
+                      [point.netWorthCents, previous?.netWorthCents],
+                      [point.incomeCents, previous?.incomeCents],
+                      [point.expenseCents, previous?.expenseCents],
+                      [
+                        point.cashFlowBalanceCents,
+                        previous?.cashFlowBalanceCents,
+                      ],
+                      [point.cashCents, previous?.cashCents],
+                      [point.investmentCents, previous?.investmentCents],
+                      [point.liabilityCents, previous?.liabilityCents],
+                    ] as const;
+
+                    return (
+                      <tr key={point.month}>
+                        <th scope="row">
+                          <Link href={`/?month=${point.month}`}>
+                            {formatMonth(point.month)}
+                          </Link>
+                        </th>
+                        {metrics.map(([value, previousValue], metricIndex) => {
+                          const delta =
+                            previousValue === undefined
+                              ? null
+                              : value - previousValue;
+
+                          return (
+                            <td key={metricIndex}>
+                              <strong>{formatMoney(value)}</strong>
+                              <span
+                                className={`history-delta history-delta-${delta === null ? "neutral" : amountDirection(delta)}`}
+                              >
+                                {delta === null
+                                  ? "起始记录"
+                                  : formatDelta(delta)}
+                              </span>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </>
       )}
     </section>
   );

@@ -57,6 +57,7 @@ type MoneyFieldProps = {
   defaultValue: string;
   error?: string;
   allowNegative?: boolean;
+  allowExpression?: boolean;
 };
 
 function MoneyField({
@@ -65,28 +66,42 @@ function MoneyField({
   defaultValue,
   error,
   allowNegative = false,
+  allowExpression = false,
 }: MoneyFieldProps) {
   const inputId = `field-${name.replaceAll(".", "-")}`;
   const errorId = `${inputId}-error`;
+  const hintId = `${inputId}-hint`;
+  const describedBy = [
+    allowExpression ? hintId : undefined,
+    error ? errorId : undefined,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <div className="form-field">
       <label htmlFor={inputId}>{label}</label>
       <div className="money-control">
         <input
-          aria-describedby={error ? errorId : undefined}
+          aria-describedby={describedBy || undefined}
           aria-invalid={error ? true : undefined}
           defaultValue={defaultValue}
           id={inputId}
           inputMode="decimal"
-          min={allowNegative ? undefined : "0"}
+          min={allowNegative || allowExpression ? undefined : "0"}
           name={name}
+          placeholder={allowExpression ? "例如 25000+3000-500" : undefined}
           required
-          step="0.01"
-          type="number"
+          step={allowExpression ? undefined : "0.01"}
+          type={allowExpression ? "text" : "number"}
         />
         <span aria-hidden="true">元</span>
       </div>
+      {allowExpression ? (
+        <p className="field-hint" id={hintId}>
+          可输入加减算式
+        </p>
+      ) : null}
       {error ? (
         <p className="field-error" id={errorId}>
           {error}
@@ -214,6 +229,7 @@ export function MonthlySnapshotForm({
             <h2 id="cash-flow-title">本月现金流</h2>
             <div className="field-grid field-grid-three">
               <MoneyField
+                allowExpression
                 defaultValue={fieldValue(
                   "income",
                   centsValue(snapshot?.cashFlow.incomeCents),
@@ -223,6 +239,7 @@ export function MonthlySnapshotForm({
                 name="income"
               />
               <MoneyField
+                allowExpression
                 defaultValue={fieldValue(
                   "expense",
                   centsValue(snapshot?.cashFlow.expenseCents),
@@ -271,6 +288,7 @@ export function MonthlySnapshotForm({
                 name="goalFund"
               />
               <MoneyField
+                allowExpression
                 defaultValue={fieldValue(
                   "dailyCash",
                   centsValue(snapshot?.cash.dailyCashCents),

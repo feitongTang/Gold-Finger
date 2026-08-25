@@ -213,6 +213,8 @@ export function calculateMonthlyTrend(
       return {
         month: snapshot.month,
         netWorthCents: review.assets.netWorthCents,
+        incomeCents: review.cashFlow.incomeCents,
+        expenseCents: review.cashFlow.expenseCents,
         cashFlowBalanceCents: review.cashFlow.balanceCents,
         cashCents: review.assets.cashCents,
         investmentCents: review.assets.investmentCents,

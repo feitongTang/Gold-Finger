@@ -295,6 +295,8 @@ describe("calculateMonthlyTrend", () => {
       {
         month: "2026-06",
         netWorthCents: BigInt(1_400_000),
+        incomeCents: BigInt(3_000_000),
+        expenseCents: BigInt(800_000),
         cashFlowBalanceCents: BigInt(2_200_000),
         cashCents: BigInt(1_600_000),
         investmentCents: BigInt(0),
@@ -303,6 +305,8 @@ describe("calculateMonthlyTrend", () => {
       {
         month: "2026-08",
         netWorthCents: BigInt(4_200_000),
+        incomeCents: BigInt(2_800_000),
+        expenseCents: BigInt(900_000),
         cashFlowBalanceCents: BigInt(300_000),
         cashCents: BigInt(2_300_000),
         investmentCents: BigInt(2_000_000),

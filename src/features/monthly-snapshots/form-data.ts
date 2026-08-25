@@ -6,6 +6,8 @@ import { MAX_FUNDS } from "@/features/monthly-snapshots/form-model";
 import type { MonthlySnapshotInput } from "@/features/monthly-snapshots/repository";
 
 const MONEY_ERROR = "请输入不小于 0 的金额，最多保留两位小数";
+const MONEY_EXPRESSION_ERROR =
+  "请输入金额或加减算式，结果须不小于 0，每项最多保留两位小数";
 const PROFIT_LOSS_ERROR =
   "请输入金额，收益填正数、亏损填负数，最多保留两位小数";
 const NET_CONTRIBUTION_ERROR =
@@ -38,13 +40,44 @@ function stringValue(formData: FormData, field: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function parseYuan(value: string) {
+function parseUnsignedYuanCents(value: string) {
   const match = /^(0|[1-9]\d*)(?:\.(\d{1,2}))?$/.exec(value);
   if (!match) return null;
 
-  const cents =
-    BigInt(match[1]) * BigInt(100) + BigInt((match[2] ?? "").padEnd(2, "0"));
+  return (
+    BigInt(match[1]) * BigInt(100) + BigInt((match[2] ?? "").padEnd(2, "0"))
+  );
+}
+
+function parseYuan(value: string) {
+  const cents = parseUnsignedYuanCents(value);
+  if (cents === null) return null;
+
   return cents <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(cents) : null;
+}
+
+function parseYuanExpression(value: string) {
+  const expression = value.replaceAll(/\s/g, "");
+  if (
+    !/^(?:0|[1-9]\d*)(?:\.\d{1,2})?(?:[+-](?:0|[1-9]\d*)(?:\.\d{1,2})?)*$/.test(
+      expression,
+    )
+  ) {
+    return null;
+  }
+
+  let total = BigInt(0);
+  for (const term of expression.match(/[+-]?[^+-]+/g) ?? []) {
+    const hasOperator = term[0] === "+" || term[0] === "-";
+    const operator = term[0] === "-" ? "-" : "+";
+    const amount = parseUnsignedYuanCents(hasOperator ? term.slice(1) : term);
+    if (amount === null) return null;
+    total += operator === "-" ? -amount : amount;
+  }
+
+  return total >= BigInt(0) && total <= BigInt(Number.MAX_SAFE_INTEGER)
+    ? Number(total)
+    : null;
 }
 
 function parseSignedYuan(value: string) {
@@ -71,14 +104,19 @@ export function parseMonthlySnapshotFormData(formData: FormData): ParseResult {
   }
 
   const moneyFields = {
-    income: stringValue(formData, "income"),
-    expense: stringValue(formData, "expense"),
     emergencyFund: stringValue(formData, "emergencyFund"),
     goalFund: stringValue(formData, "goalFund"),
-    dailyCash: stringValue(formData, "dailyCash"),
     huabeiBalance: stringValue(formData, "huabeiBalance"),
   };
-  const parsedMoney: Record<keyof typeof moneyFields, number> = {
+  const expressionMoneyFields = {
+    income: stringValue(formData, "income"),
+    expense: stringValue(formData, "expense"),
+    dailyCash: stringValue(formData, "dailyCash"),
+  };
+  const parsedMoney: Record<
+    keyof typeof moneyFields | keyof typeof expressionMoneyFields,
+    number
+  > = {
     income: 0,
     expense: 0,
     emergencyFund: 0,
@@ -92,6 +130,14 @@ export function parseMonthlySnapshotFormData(formData: FormData): ParseResult {
   >) {
     const cents = parseYuan(value);
     if (cents === null) errors[field] = MONEY_ERROR;
+    else parsedMoney[field] = cents;
+  }
+
+  for (const [field, value] of Object.entries(expressionMoneyFields) as Array<
+    [keyof typeof expressionMoneyFields, string]
+  >) {
+    const cents = parseYuanExpression(value);
+    if (cents === null) errors[field] = MONEY_EXPRESSION_ERROR;
     else parsedMoney[field] = cents;
   }
 

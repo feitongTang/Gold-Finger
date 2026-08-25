@@ -85,7 +85,7 @@ describe("save monthly snapshot", () => {
         "funds.0.name": "纳斯达克指数基金",
       },
       fieldErrors: {
-        expense: "请输入不小于 0 的金额，最多保留两位小数",
+        expense: "请输入金额或加减算式，结果须不小于 0，每项最多保留两位小数",
       },
     });
     expect(repository.findByMonth("2026-08")?.cashFlow.expenseCents).toBe(

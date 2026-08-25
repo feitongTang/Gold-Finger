@@ -95,6 +95,64 @@ describe("monthly snapshot form data", () => {
     );
   });
 
+  it("evaluates addition and subtraction for the requested monthly amount fields", () => {
+    const formData = validFormData();
+    formData.set("income", "25000 + 3000.50 - 500");
+    formData.set("expense", "8000-500.25+20");
+    formData.set("dailyCash", "8000 + 1200 - 300.08");
+
+    expect(formDataModel.parseMonthlySnapshotFormData(formData)).toMatchObject({
+      ok: true,
+      value: {
+        cashFlow: {
+          incomeCents: 2_750_050,
+          expenseCents: 751_975,
+        },
+        cash: { dailyCashCents: 889_992 },
+      },
+    });
+  });
+
+  it("rejects an amount expression outside the safe integer range", () => {
+    const formData = validFormData();
+    formData.set("income", "90071992547409.91+0.01");
+
+    expect(formDataModel.parseMonthlySnapshotFormData(formData)).toMatchObject({
+      ok: false,
+      errors: {
+        income: "请输入金额或加减算式，结果须不小于 0，每项最多保留两位小数",
+      },
+    });
+  });
+
+  it.each([
+    ["income", "1000--200"],
+    ["expense", "500-600"],
+    ["dailyCash", "(1000+200)-100"],
+  ])("rejects invalid amount expression in %s", (field, expression) => {
+    const formData = validFormData();
+    formData.set(field, expression);
+
+    expect(formDataModel.parseMonthlySnapshotFormData(formData)).toMatchObject({
+      ok: false,
+      errors: {
+        [field]: "请输入金额或加减算式，结果须不小于 0，每项最多保留两位小数",
+      },
+    });
+  });
+
+  it("keeps other non-negative amount fields limited to a single amount", () => {
+    const formData = validFormData();
+    formData.set("emergencyFund", "50000+1000");
+
+    expect(formDataModel.parseMonthlySnapshotFormData(formData)).toMatchObject({
+      ok: false,
+      errors: {
+        emergencyFund: "请输入不小于 0 的金额，最多保留两位小数",
+      },
+    });
+  });
+
   it("derives cash-flow investment contribution from the fund inputs", () => {
     const formData = validFormData();
     const result = formDataModel.parseMonthlySnapshotFormData(formData);
@@ -180,8 +238,16 @@ describe("monthly snapshot form data", () => {
 
   it.each([
     ["month", "2026-13", "请选择有效月份"],
-    ["expense", "-1", "请输入不小于 0 的金额，最多保留两位小数"],
-    ["income", "1.234", "请输入不小于 0 的金额，最多保留两位小数"],
+    [
+      "expense",
+      "-1",
+      "请输入金额或加减算式，结果须不小于 0，每项最多保留两位小数",
+    ],
+    [
+      "income",
+      "1.234",
+      "请输入金额或加减算式，结果须不小于 0，每项最多保留两位小数",
+    ],
     ["goalFund", "not-money", "请输入不小于 0 的金额，最多保留两位小数"],
   ])("reports an error for invalid %s", (field, value, message) => {
     const formData = validFormData();
@@ -227,7 +293,7 @@ describe("monthly snapshot form data", () => {
       ok: false,
       errors: {
         month: "请选择有效月份",
-        expense: "请输入不小于 0 的金额，最多保留两位小数",
+        expense: "请输入金额或加减算式，结果须不小于 0，每项最多保留两位小数",
         fundCount: "基金数量无效，请刷新后重试",
       },
     });

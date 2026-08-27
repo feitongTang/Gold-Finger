@@ -4,16 +4,32 @@ import { describe, expect, it } from "vitest";
 const css = readFileSync(new URL("./globals.css", import.meta.url), "utf8");
 
 describe("fixed design system", () => {
-  it("defines the approved Prussian blue and fog gray finance tokens", () => {
-    expect(css).toContain("--background-primary: #f2f4f3");
-    expect(css).toContain("--background-secondary: #e8ebeb");
-    expect(css).toContain("--surface-primary: #f8faf9");
-    expect(css).toContain("--text-primary: #202b31");
+  it("defines the approved Prussian blue and fog gray semantic palette", () => {
+    expect(css).toContain("--fog-gray: #e5ddd7");
+    expect(css).toContain("--background-primary: #f6f8f8");
+    expect(css).toContain("--background-secondary: var(--fog-gray)");
+    expect(css).toContain("--surface-primary: #ffffff");
+    expect(css).toContain("--surface-subtle: #f7f5f3");
+    expect(css).toContain("--text-primary: #1d2c34");
+    expect(css).toContain("--text-secondary: #58676f");
+    expect(css).toContain("--text-inverse: #ffffff");
     expect(css).toContain("--accent-primary: #003153");
-    expect(css).toContain("--accent-soft: #dfe7eb");
-    expect(css).toContain("--asset-cash: #b8c4c7");
+    expect(css).toContain("--accent-hover: #002944");
+    expect(css).toContain("--accent-active: #001f33");
+    expect(css).toContain("--accent-soft: #eaf0f2");
+    expect(css).toContain("--success: #3f6b5a");
+    expect(css).toContain("--success-soft: #eef3f0");
+    expect(css).toContain("--warning: #80663d");
+    expect(css).toContain("--warning-soft: #f5f0e8");
+    expect(css).toContain("--error: #98534e");
+    expect(css).toContain("--error-soft: #f6ecea");
+    expect(css).toContain("--asset-cash: #bbc6c8");
     expect(css).toContain("--asset-investment: #536b89");
-    expect(css).toContain("--chart-net-worth: #003153");
+    expect(css).toContain("--chart-net-worth: var(--accent-primary)");
+    expect(css).toContain("--chart-cash: #7c9398");
+    expect(css).toContain("--chart-investment: var(--asset-investment)");
+    expect(css).toContain("--chart-income: var(--success)");
+    expect(css).toContain("--chart-liability: var(--error)");
     expect(css).toContain("--radius-control: 8px");
     expect(css).toContain("--motion-normal: 180ms");
   });

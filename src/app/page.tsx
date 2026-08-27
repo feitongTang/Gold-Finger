@@ -1,3 +1,4 @@
+import { AppHeader } from "@/app/app-header";
 import {
   resolveSelectedMonth,
   shiftMonth,
@@ -9,7 +10,6 @@ import {
   MonthlyReview,
 } from "@/features/monthly-snapshots/monthly-review";
 import { MonthlySnapshotForm } from "@/features/monthly-snapshots/monthly-snapshot-form";
-import { ThemeSettings } from "@/features/theme/theme-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -40,14 +40,7 @@ export default async function Home({
 
   return (
     <>
-      <header className="app-header">
-        <div className="app-header-inner">
-          <p className="brand">Gold-Finger</p>
-          <span className="header-divider" aria-hidden="true" />
-          <h1 className="header-context">月度财务记录</h1>
-          <ThemeSettings />
-        </div>
-      </header>
+      <AppHeader />
       <main className="page-content">
         <MonthlyReview
           categories={categories}

@@ -1,3 +1,5 @@
+import { AppHeader } from "@/app/app-header";
+
 export default function Loading() {
   return (
     <div
@@ -8,13 +10,7 @@ export default function Loading() {
       <p className="sr-only" role="status">
         正在载入月度记录，请稍候。
       </p>
-      <header className="app-header" aria-hidden="true">
-        <div className="app-header-inner">
-          <p className="brand">Gold-Finger</p>
-          <span className="header-divider" aria-hidden="true" />
-          <p className="header-context">月度财务记录</p>
-        </div>
-      </header>
+      <AppHeader ariaHidden />
       <main className="page-content" aria-hidden="true">
         <div className="review-panel review-loading">
           <div className="skeleton skeleton-review-title" />

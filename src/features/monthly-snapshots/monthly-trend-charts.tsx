@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 
 import {
   calculateRecentAverageCents,
@@ -196,36 +196,44 @@ function LineChart({
                 const accessibleLabel = `${formatFullMonth(months[index])}${item.label}：${formatMoney(item.values[index])}`;
 
                 return (
-                  <circle
-                    aria-label={accessibleLabel}
-                    className="trend-chart-point"
-                    cx={point.x}
-                    cy={point.y}
-                    key={months[index]}
-                    onBlur={() => setActivePoint(null)}
-                    onFocus={() =>
-                      setActivePoint({
-                        label: item.label,
-                        month: months[index],
-                        value: item.values[index],
-                        x: point.x,
-                        y: point.y,
-                      })
-                    }
-                    onMouseEnter={() =>
-                      setActivePoint({
-                        label: item.label,
-                        month: months[index],
-                        value: item.values[index],
-                        x: point.x,
-                        y: point.y,
-                      })
-                    }
-                    onMouseLeave={() => setActivePoint(null)}
-                    r="4"
-                    role="img"
-                    tabIndex={0}
-                  />
+                  <Fragment key={months[index]}>
+                    <circle
+                      aria-label={accessibleLabel}
+                      className="trend-chart-hit-target"
+                      cx={point.x}
+                      cy={point.y}
+                      onBlur={() => setActivePoint(null)}
+                      onFocus={() =>
+                        setActivePoint({
+                          label: item.label,
+                          month: months[index],
+                          value: item.values[index],
+                          x: point.x,
+                          y: point.y,
+                        })
+                      }
+                      onMouseEnter={() =>
+                        setActivePoint({
+                          label: item.label,
+                          month: months[index],
+                          value: item.values[index],
+                          x: point.x,
+                          y: point.y,
+                        })
+                      }
+                      onMouseLeave={() => setActivePoint(null)}
+                      r="20"
+                      role="img"
+                      tabIndex={0}
+                    />
+                    <circle
+                      aria-hidden="true"
+                      className="trend-chart-point"
+                      cx={point.x}
+                      cy={point.y}
+                      r="4"
+                    />
+                  </Fragment>
                 );
               })}
             </g>

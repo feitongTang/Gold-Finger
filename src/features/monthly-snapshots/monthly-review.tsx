@@ -101,36 +101,28 @@ export function MonthlyReview({
   if (!snapshot) {
     return (
       <section
-        className="review-panel review-panel-empty"
         aria-labelledby="review-title"
+        className="review-panel review-panel-empty"
       >
-        <div className="review-heading">
+        <header className="review-page-heading">
           <div>
-            <p className="review-eyebrow">{formatMonth(month)}月度复盘</p>
-            <h2 id="review-title" tabIndex={-1}>
-              本月结果
-            </h2>
+            <p className="review-eyebrow">{formatMonth(month)}</p>
+            <h1 id="review-title" tabIndex={-1}>
+              月度复盘
+            </h1>
           </div>
-          <div className="review-heading-actions">
-            <div className="net-worth-summary net-worth-summary-empty">
-              <span>当前净资产</span>
-              <strong aria-label="当前净资产尚未记录">—</strong>
-            </div>
-            <MonthlyEntryTrigger label="新建数据" />
+          <MonthSwitcher month={month} />
+        </header>
+        <div className="review-summary review-summary-empty">
+          <div>
+            <span>当前净资产</span>
+            <strong aria-label="当前净资产尚未记录">—</strong>
           </div>
-        </div>
-        <MonthSwitcher month={month} />
-        <div className="review-empty-message">
-          <span className="review-empty-icon" aria-hidden="true">
-            <svg fill="none" viewBox="0 0 32 32">
-              <path d="M10 4.75h9l5 5v17.5H10z" />
-              <path d="M19 4.75v5h5M13.75 21.25h6.5M13.75 16.75l2-2 2 1.5 3-3" />
-            </svg>
-          </span>
-          <h3>暂无复盘结果</h3>
-          <p>
-            请在下方新建这个月份的财务记录，资金分配与资产结构会显示在这里。
-          </p>
+          <div className="review-empty-message">
+            <h3>暂无复盘结果</h3>
+            <p>新建这个月份的财务记录后，资金分配与资产结构会显示在这里。</p>
+          </div>
+          <MonthlyEntryTrigger label="新建数据" />
         </div>
       </section>
     );
@@ -149,71 +141,77 @@ export function MonthlyReview({
   const consistency = calculateMonthlyConsistency(snapshot, previousSnapshot);
   return (
     <section className="review-panel" aria-labelledby="review-title">
-      <div className="review-heading">
+      <header className="review-page-heading">
         <div>
-          <p className="review-eyebrow">{formatMonth(month)}月度复盘</p>
-          <h2 id="review-title" tabIndex={-1}>
-            本月结果
-          </h2>
+          <p className="review-eyebrow">{formatMonth(month)}</p>
+          <h1 id="review-title" tabIndex={-1}>
+            月度复盘
+          </h1>
         </div>
-        <div className="review-heading-actions">
-          <div className="net-worth-summary">
-            <span>当前净资产</span>
-            <strong>{formatMoney(review.assets.netWorthCents)}</strong>
-          </div>
-          <div className="review-record-actions">
-            <MonthlyEntryTrigger label="更新数据" />
-            <MonthlyRecordActions month={month} />
-          </div>
+        <MonthSwitcher month={month} />
+      </header>
+
+      <div
+        className={`review-summary${consistency ? " review-summary-with-consistency" : ""}`}
+      >
+        <div className="net-worth-summary">
+          <span>当前净资产</span>
+          <strong>{formatMoney(review.assets.netWorthCents)}</strong>
+        </div>
+        <div className="review-record-actions">
+          <MonthlyEntryTrigger label="更新数据" />
+          <MonthlyRecordActions month={month} />
         </div>
       </div>
 
-      <MonthSwitcher month={month} />
-
       {consistency ? (
-        <section
-          aria-labelledby="consistency-review-title"
-          className="consistency-review"
-        >
-          <div className="review-section-heading consistency-review-heading">
-            <div>
-              <h3 id="consistency-review-title">跨月一致性</h3>
-              <p>{`与 ${formatMonth(consistency.previousMonth)}的最近一条前序记录比较`}</p>
-            </div>
-            <span>仅作复核提示，不影响保存</span>
+        <details className="consistency-review">
+          <summary className="consistency-review-summary">
+            <span>
+              <strong id="consistency-review-title">跨月一致性</strong>
+              <span>{`与 ${formatMonth(consistency.previousMonth)}的最近一条前序记录比较`}</span>
+            </span>
+            <span className="consistency-review-meta">
+              仅作复核提示，不影响保存
+            </span>
+            <span aria-hidden="true" className="consistency-review-chevron">
+              ⌄
+            </span>
+          </summary>
+          <div className="consistency-review-content">
+            <dl className="consistency-list">
+              <div className="consistency-item">
+                <dt>净资产变化</dt>
+                <dd>{formatDelta(consistency.netWorthChangeCents)}</dd>
+                <dd className="consistency-explanation">
+                  收入 − 支出 + 投资损益可解释：
+                  {formatDelta(consistency.explainedNetWorthChangeCents)}
+                  ；投资净投入视为资产内部转移
+                </dd>
+                <dd
+                  className={`consistency-difference consistency-difference-${consistency.unexplainedNetWorthChangeCents === BigInt(0) ? "matched" : "warning"}`}
+                >
+                  净资产可解释差额：
+                  {formatDelta(consistency.unexplainedNetWorthChangeCents)}
+                </dd>
+              </div>
+              <div className="consistency-item">
+                <dt>投资市值变化</dt>
+                <dd>{formatDelta(consistency.investmentChangeCents)}</dd>
+                <dd className="consistency-explanation">
+                  本月净投入 + 投资损益可解释：
+                  {formatDelta(consistency.explainedInvestmentChangeCents)}
+                </dd>
+                <dd
+                  className={`consistency-difference consistency-difference-${consistency.unexplainedInvestmentChangeCents === BigInt(0) ? "matched" : "warning"}`}
+                >
+                  投资市值解释差额：
+                  {formatDelta(consistency.unexplainedInvestmentChangeCents)}
+                </dd>
+              </div>
+            </dl>
           </div>
-          <dl className="consistency-grid">
-            <div className="consistency-card">
-              <dt>净资产变化</dt>
-              <dd>{formatDelta(consistency.netWorthChangeCents)}</dd>
-              <dd className="consistency-explanation">
-                收入 − 支出 + 投资损益可解释：
-                {formatDelta(consistency.explainedNetWorthChangeCents)}
-                ；投资净投入视为资产内部转移
-              </dd>
-              <dd
-                className={`consistency-difference consistency-difference-${consistency.unexplainedNetWorthChangeCents === BigInt(0) ? "matched" : "warning"}`}
-              >
-                净资产可解释差额：
-                {formatDelta(consistency.unexplainedNetWorthChangeCents)}
-              </dd>
-            </div>
-            <div className="consistency-card">
-              <dt>投资市值变化</dt>
-              <dd>{formatDelta(consistency.investmentChangeCents)}</dd>
-              <dd className="consistency-explanation">
-                本月净投入 + 投资损益可解释：
-                {formatDelta(consistency.explainedInvestmentChangeCents)}
-              </dd>
-              <dd
-                className={`consistency-difference consistency-difference-${consistency.unexplainedInvestmentChangeCents === BigInt(0) ? "matched" : "warning"}`}
-              >
-                投资市值解释差额：
-                {formatDelta(consistency.unexplainedInvestmentChangeCents)}
-              </dd>
-            </div>
-          </dl>
-        </section>
+        </details>
       ) : null}
 
       <div className="review-overview-grid">
@@ -234,7 +232,7 @@ export function MonthlyReview({
               <dt>支出</dt>
               <dd>{formatMoney(review.cashFlow.expenseCents)}</dd>
             </div>
-            <div className="metric-card metric-card-emphasis">
+            <div className="metric-card">
               <dt>月度结余</dt>
               <dd
                 className={`metric-card-${amountDirection(review.cashFlow.balanceCents)}`}

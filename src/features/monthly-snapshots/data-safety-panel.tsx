@@ -47,6 +47,7 @@ function formatExportTime(timestamp: string) {
 
 export function DataSafetyPanel() {
   const router = useRouter();
+  const fileButtonRef = useRef<HTMLButtonElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const lastExportAt = useSyncExternalStore(
     subscribeToLastExport,
@@ -87,7 +88,7 @@ export function DataSafetyPanel() {
   function prepareRestore() {
     if (!restoreFile) {
       setOperation({ status: "error", message: "请先选择 JSON 备份文件。" });
-      fileInputRef.current?.focus();
+      fileButtonRef.current?.focus();
       return;
     }
     if (restoreFile.size > MAX_BACKUP_SIZE) {
@@ -179,18 +180,36 @@ export function DataSafetyPanel() {
           <label className="backup-file-label" htmlFor="backup-file">
             选择备份文件
           </label>
-          <input
-            accept="application/json,.json"
-            disabled={busy}
-            id="backup-file"
-            onChange={(event) => {
-              setRestoreFile(event.target.files?.[0] ?? null);
-              setConfirmingRestore(false);
-              setOperation(initialOperationState);
-            }}
-            ref={fileInputRef}
-            type="file"
-          />
+          <div className="backup-file-picker">
+            <input
+              accept="application/json,.json"
+              className="sr-only"
+              disabled={busy}
+              id="backup-file"
+              onChange={(event) => {
+                setRestoreFile(event.target.files?.[0] ?? null);
+                setConfirmingRestore(false);
+                setOperation(initialOperationState);
+              }}
+              ref={fileInputRef}
+              type="file"
+            />
+            <button
+              className="backup-file-button"
+              disabled={busy}
+              onClick={() => fileInputRef.current?.click()}
+              ref={fileButtonRef}
+              type="button"
+            >
+              选择文件
+            </button>
+            <span
+              className="backup-file-name"
+              title={restoreFile?.name ?? "未选择文件"}
+            >
+              {restoreFile?.name ?? "未选择文件"}
+            </span>
+          </div>
 
           {confirmingRestore ? (
             <div className="restore-confirmation" role="alert">

@@ -61,19 +61,57 @@ const snapshots: MonthlySnapshot[] = [
 ];
 
 describe("MonthlyReview", () => {
-  it("keeps the monthly balance card neutral while coloring a positive amount", () => {
+  it("puts month navigation before the current net worth summary", () => {
     const markup = renderToStaticMarkup(
       createElement(MonthlyReview, {
         categories: INVESTMENT_CATEGORIES,
         month: "2026-07",
+        previousSnapshot: snapshots[0],
         snapshot: snapshots[1],
       }),
     );
 
-    expect(markup).toContain(
-      '<div class="metric-card metric-card-emphasis"><dt>月度结余</dt><dd class="metric-card-positive">',
+    expect(markup).toContain("2026 年 7 月");
+    expect(markup).toContain("月度复盘");
+    expect(markup).toContain('<h1 id="review-title"');
+    expect(markup.indexOf("切换记录月份")).toBeLessThan(
+      markup.indexOf("当前净资产"),
     );
-    expect(markup).not.toContain("metric-card-emphasis metric-card-positive");
+    expect(markup).toContain('class="review-summary');
+  });
+
+  it("renders a quiet empty summary without a decorative icon", () => {
+    const markup = renderToStaticMarkup(
+      createElement(MonthlyReview, {
+        categories: INVESTMENT_CATEGORIES,
+        month: "2026-08",
+        snapshot: null,
+      }),
+    );
+
+    expect(markup).toContain("暂无复盘结果");
+    expect(markup).toContain("新建数据");
+    expect(markup).not.toContain("review-empty-icon");
+    expect(markup).not.toContain("<svg");
+  });
+
+  it("shows cash flow values with mathematical signs and clear labels", () => {
+    const markup = renderToStaticMarkup(
+      createElement(MonthlyReview, {
+        categories: INVESTMENT_CATEGORIES,
+        month: "2026-07",
+        previousSnapshot: snapshots[0],
+        snapshot: snapshots[1],
+      }),
+    );
+
+    expect(markup).toContain("资金分配");
+    expect(markup).toContain("收入");
+    expect(markup).toContain("支出");
+    expect(markup).toContain("月度结余");
+    expect(markup).toContain("+¥7,000.00");
+    expect(markup).toContain('class="consistency-list"');
+    expect(markup).not.toContain("consistency-card");
   });
 
   it("shows the liability ratio only inside the liability summary card", () => {
@@ -104,6 +142,12 @@ describe("MonthlyReview", () => {
     expect(markup).toContain("净资产可解释差额");
     expect(markup).toContain("投资市值解释差额");
     expect(markup).toContain("仅作复核提示，不影响保存");
+    expect(markup).toContain(
+      'class="review-summary review-summary-with-consistency"',
+    );
+    expect(markup).toContain('<details class="consistency-review">');
+    expect(markup).toContain('class="consistency-review-summary"');
+    expect(markup).not.toContain('<details class="consistency-review" open=""');
   });
 
   it("does not show cross-month reconciliation for the first record", () => {
@@ -116,11 +160,13 @@ describe("MonthlyReview", () => {
     );
 
     expect(markup).not.toContain("跨月一致性");
+    expect(markup).toContain('class="review-summary"');
+    expect(markup).not.toContain("review-summary-with-consistency");
   });
 });
 
 describe("MonthlyHistory", () => {
-  it("renders changes as compact semantic badges", () => {
+  it("renders compact mathematical deltas without explanatory badges", () => {
     const markup = renderToStaticMarkup(
       createElement(MonthlyHistory, { snapshots }),
     );

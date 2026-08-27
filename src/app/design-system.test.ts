@@ -13,6 +13,7 @@ describe("fixed design system", () => {
     expect(css).toContain("--text-primary: #1d2c34");
     expect(css).toContain("--text-secondary: #58676f");
     expect(css).toContain("--text-inverse: #ffffff");
+    expect(css).toContain("--border-interactive: #819096");
     expect(css).toContain("--accent-primary: #003153");
     expect(css).toContain("--accent-hover: #002944");
     expect(css).toContain("--accent-active: #001f33");
@@ -90,6 +91,12 @@ describe("fixed design system", () => {
       /\.asset-bar-investment\s*\{[^}]*background:\s*var\(--asset-investment\)/,
     );
     expect(css).toMatch(
+      /\.asset-legend-cash\s*\{[^}]*background:\s*var\(--asset-cash\)/,
+    );
+    expect(css).toMatch(
+      /\.asset-legend-investment\s*\{[^}]*background:\s*var\(--asset-investment\)/,
+    );
+    expect(css).toMatch(
       /\.allocation-bar\s*\{[^}]*background:\s*var\(--fog-gray\)/,
     );
     expect(css).toMatch(
@@ -118,6 +125,33 @@ describe("fixed design system", () => {
     );
     expect(css).toMatch(
       /\.data-safety-eyebrow\s*\{[^}]*color:\s*var\(--text-secondary\)/,
+    );
+  });
+
+  it("gives form controls a dedicated interactive boundary and focus halo", () => {
+    expect(css).toMatch(
+      /input,\s*select\s*\{[^}]*border:\s*1px solid var\(--border-interactive\)/,
+    );
+    expect(css).toMatch(
+      /input:focus,\s*select:focus\s*\{[^}]*border-color:\s*var\(--accent-primary\)[^}]*box-shadow:\s*0 0 0 3px var\(--focus-ring\)/,
+    );
+    expect(css).toMatch(
+      /:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--accent-primary\)/,
+    );
+  });
+
+  it("maps month navigation hover and keyboard focus to accent roles", () => {
+    expect(css).toMatch(
+      /\.month-switcher-arrow:hover,\s*\.month-switcher-arrow:focus-visible\s*\{[^}]*border-color:\s*var\(--accent-primary\)[^}]*color:\s*var\(--accent-hover\)[^}]*background:\s*var\(--accent-soft\)/,
+    );
+  });
+
+  it("maps enabled primary and retry pressed states to the active accent", () => {
+    expect(css).toMatch(
+      /\.primary-button:active:not\(:disabled\),\s*\.retry-button:active:not\(:disabled\)\s*\{[^}]*border-color:\s*var\(--accent-active\)[^}]*background:\s*var\(--accent-active\)/,
+    );
+    expect(css).toMatch(
+      /\.primary-button:active:not\(:disabled\),\s*\.secondary-button:active:not\(:disabled\),\s*\.danger-button:active:not\(:disabled\),\s*\.retry-button:active:not\(:disabled\)\s*\{[^}]*transform:\s*scale\(0\.99\)/,
     );
   });
 });

@@ -155,7 +155,7 @@ button:disabled {
 
 .page-intro h1 {
   margin: 0;
-  color: var(--accent-hover);
+  color: var(--text-primary);
   font-size: clamp(1.75rem, 4vw, 2.5rem);
   font-weight: 600;
   letter-spacing: -0.04em;
@@ -309,7 +309,7 @@ button:disabled {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-control);
   color: var(--text-primary);
-  background: transparent;
+  background: var(--surface-primary);
   font-size: 24px;
   line-height: 1;
   text-decoration: none;
@@ -533,9 +533,9 @@ button:disabled {
 }
 
 .consistency-difference-warning {
-  border-color: color-mix(in srgb, var(--accent-primary) 24%, transparent);
-  color: var(--accent-hover);
-  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--warning) 24%, transparent);
+  color: var(--warning);
+  background: var(--warning-soft);
 }
 
 .review-section {
@@ -685,7 +685,7 @@ button:disabled {
   height: 8px;
   border-radius: var(--radius-compact);
   margin-top: 0.65rem;
-  background: var(--surface-subtle);
+  background: var(--fog-gray);
 }
 
 .asset-bar-cash {
@@ -818,19 +818,19 @@ button:disabled {
   overflow: hidden;
   height: 0.5rem;
   border-radius: 999px;
-  background: var(--border-subtle);
+  background: var(--fog-gray);
 }
 
 .allocation-bar span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--accent-primary);
+  background: var(--asset-investment);
 }
 
 .allocation-row strong {
   min-width: 3rem;
-  color: var(--accent-hover);
+  color: var(--asset-investment);
   font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -1164,7 +1164,7 @@ button:disabled {
 }
 
 .trend-series-income {
-  color: var(--accent-hover);
+  color: var(--chart-income);
 }
 
 .history-table-details {
@@ -1675,7 +1675,7 @@ select[aria-invalid="true"] {
 .secondary-button {
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
-  background: transparent;
+  background: var(--surface-primary);
   box-shadow: none;
 }
 
@@ -1764,7 +1764,7 @@ select[aria-invalid="true"] {
 
 .data-safety-eyebrow {
   margin: 0 0 0.35rem;
-  color: var(--accent-hover);
+  color: var(--text-secondary);
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.08em;

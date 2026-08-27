@@ -81,13 +81,43 @@ describe("fixed design system", () => {
     );
   });
 
-  it("keeps the asset composition colors distinct and readable", () => {
-    expect(css).toMatch(/\.asset-bar\s*\{[^}]*height:\s*8px/);
+  it("maps each financial meaning to one approved color role", () => {
+    expect(css).toMatch(/\.asset-bar\s*\{[^}]*background:\s*var\(--fog-gray\)/);
+    expect(css).toMatch(
+      /\.asset-bar-cash\s*\{[^}]*background:\s*var\(--asset-cash\)/,
+    );
     expect(css).toMatch(
       /\.asset-bar-investment\s*\{[^}]*background:\s*var\(--asset-investment\)/,
     );
     expect(css).toMatch(
-      /\.asset-legend-investment\s*\{[^}]*background:\s*var\(--asset-investment\)/,
+      /\.allocation-bar\s*\{[^}]*background:\s*var\(--fog-gray\)/,
+    );
+    expect(css).toMatch(
+      /\.allocation-bar span\s*\{[^}]*background:\s*var\(--asset-investment\)/,
+    );
+    expect(css).toMatch(
+      /\.allocation-row strong\s*\{[^}]*color:\s*var\(--asset-investment\)/,
+    );
+    expect(css).toMatch(
+      /\.trend-series-income\s*\{[^}]*color:\s*var\(--chart-income\)/,
+    );
+  });
+
+  it("keeps structural surfaces neutral and accent color action-oriented", () => {
+    expect(css).toMatch(
+      /\.page-intro h1\s*\{[^}]*color:\s*var\(--text-primary\)/,
+    );
+    expect(css).toMatch(
+      /\.month-switcher-arrow\s*\{[^}]*background:\s*var\(--surface-primary\)/,
+    );
+    expect(css).toMatch(
+      /\.secondary-button\s*\{[^}]*background:\s*var\(--surface-primary\)/,
+    );
+    expect(css).toMatch(
+      /\.consistency-difference-warning\s*\{[^}]*color:\s*var\(--warning\)[^}]*background:\s*var\(--warning-soft\)/,
+    );
+    expect(css).toMatch(
+      /\.data-safety-eyebrow\s*\{[^}]*color:\s*var\(--text-secondary\)/,
     );
   });
 });

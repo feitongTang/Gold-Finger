@@ -22,10 +22,10 @@
 
 ## File Structure
 
-| File | Responsibility |
-| --- | --- |
-| `src/app/globals.css` | Own the approved semantic tokens and map existing selectors to them. |
-| `src/app/design-system.test.ts` | Prevent token drift and verify cross-component semantic mappings. |
+| File                            | Responsibility                                                       |
+| ------------------------------- | -------------------------------------------------------------------- |
+| `src/app/globals.css`           | Own the approved semantic tokens and map existing selectors to them. |
+| `src/app/design-system.test.ts` | Prevent token drift and verify cross-component semantic mappings.    |
 
 No React, database, migration, configuration, or dependency files should change.
 
@@ -34,10 +34,12 @@ No React, database, migration, configuration, or dependency files should change.
 ### Task 1: Replace the foundational palette tokens
 
 **Files:**
+
 - Modify: `src/app/globals.css:3-38`
 - Test: `src/app/design-system.test.ts:6-20`
 
 **Interfaces:**
+
 - Consumes: The approved roles in the linked specification.
 - Produces: Root semantic color properties consumed by all selectors in Task 2; no TypeScript interface.
 
@@ -160,10 +162,12 @@ git commit -m "style: calibrate finance color tokens"
 ### Task 2: Map components to the approved semantic roles
 
 **Files:**
+
 - Modify: `src/app/globals.css:145-1695`
 - Test: `src/app/design-system.test.ts:68-80`
 
 **Interfaces:**
+
 - Consumes: Task 1 properties, especially `--fog-gray`, `--surface-primary`, `--text-primary`, `--text-secondary`, `--asset-investment`, `--chart-income`, `--warning`, and `--warning-soft`.
 - Produces: Consistent mappings for headings, controls, warnings, asset bars, allocation bars, charts, and safety labels; no React changes.
 
@@ -171,9 +175,7 @@ git commit -m "style: calibrate finance color tokens"
 
 ```ts
 it("maps each financial meaning to one approved color role", () => {
-  expect(css).toMatch(
-    /\.asset-bar\s*\{[^}]*background:\s*var\(--fog-gray\)/,
-  );
+  expect(css).toMatch(/\.asset-bar\s*\{[^}]*background:\s*var\(--fog-gray\)/);
   expect(css).toMatch(
     /\.asset-bar-cash\s*\{[^}]*background:\s*var\(--asset-cash\)/,
   );
@@ -301,11 +303,13 @@ git commit -m "style: align financial color semantics"
 ### Task 3: Verify rendered desktop states and the full project
 
 **Files:**
+
 - Verify only: `src/app/globals.css`
 - Verify only: `src/app/design-system.test.ts`
 - Do not create committed screenshots, traces, or temporary browser scripts.
 
 **Interfaces:**
+
 - Consumes: Tasks 1–2, the existing demo flow, and the in-app Browser runtime.
 - Produces: Evidence that approved computed colors render in every key desktop state without regressions; no source interface.
 
@@ -346,11 +350,17 @@ Collect computed values with:
 ```js
 await tab.playwright.evaluate(() => ({
   page: getComputedStyle(document.body).backgroundColor,
-  assetTrack: getComputedStyle(document.querySelector(".asset-bar")).backgroundColor,
-  cash: getComputedStyle(document.querySelector(".asset-bar-cash")).backgroundColor,
-  investment: getComputedStyle(document.querySelector(".asset-bar-investment")).backgroundColor,
-  allocationTrack: getComputedStyle(document.querySelector(".allocation-bar")).backgroundColor,
-  allocationFill: getComputedStyle(document.querySelector(".allocation-bar span")).backgroundColor,
+  assetTrack: getComputedStyle(document.querySelector(".asset-bar"))
+    .backgroundColor,
+  cash: getComputedStyle(document.querySelector(".asset-bar-cash"))
+    .backgroundColor,
+  investment: getComputedStyle(document.querySelector(".asset-bar-investment"))
+    .backgroundColor,
+  allocationTrack: getComputedStyle(document.querySelector(".allocation-bar"))
+    .backgroundColor,
+  allocationFill: getComputedStyle(
+    document.querySelector(".allocation-bar span"),
+  ).backgroundColor,
 }));
 ```
 
@@ -371,21 +381,31 @@ Capture screenshot evidence showing the asset and allocation bars together.
 
 ```js
 await tab.playwright.getByRole("button", { name: "负债" }).click();
-await tab.playwright.getByRole("img", { name: /负债变化趋势/ }).waitFor({ state: "visible" });
+await tab.playwright
+  .getByRole("img", { name: /负债变化趋势/ })
+  .waitFor({ state: "visible" });
 await tab.playwright.getByRole("button", { name: "支出" }).click();
-await tab.playwright.getByRole("img", { name: /支出趋势/ }).waitFor({ state: "visible" });
+await tab.playwright
+  .getByRole("img", { name: /支出趋势/ })
+  .waitFor({ state: "visible" });
 await tab.playwright.locator(".history-table-details summary").click();
-await tab.playwright.locator(".history-table-scroll").waitFor({ state: "visible" });
+await tab.playwright
+  .locator(".history-table-scroll")
+  .waitFor({ state: "visible" });
 ```
 
 Then evaluate:
 
 ```js
 await tab.playwright.evaluate(() => ({
-  liability: getComputedStyle(document.querySelector(".trend-series-liability")).color,
-  expense: getComputedStyle(document.querySelector(".trend-series-expense")).color,
-  positive: getComputedStyle(document.querySelector(".history-delta-positive")).color,
-  negative: getComputedStyle(document.querySelector(".history-delta-negative")).color,
+  liability: getComputedStyle(document.querySelector(".trend-series-liability"))
+    .color,
+  expense: getComputedStyle(document.querySelector(".trend-series-expense"))
+    .color,
+  positive: getComputedStyle(document.querySelector(".history-delta-positive"))
+    .color,
+  negative: getComputedStyle(document.querySelector(".history-delta-negative"))
+    .color,
 }));
 ```
 

@@ -2,40 +2,43 @@
 
 :root {
   color-scheme: light;
-  --background-primary: #f2f4f3;
-  --background-secondary: #e8ebeb;
-  --surface-primary: #f8faf9;
-  --surface-subtle: #e1e6e6;
+  --fog-gray: #e5ddd7;
+  --background-primary: #f6f8f8;
+  --background-secondary: var(--fog-gray);
+  --surface-primary: #ffffff;
+  --surface-subtle: #f7f5f3;
   --surface-elevated: #ffffff;
-  --text-primary: #202b31;
-  --text-secondary: #5f6c72;
-  --text-tertiary: #7b8589;
-  --text-inverse: #f8faf9;
-  --border-subtle: rgb(0 49 83 / 11%);
-  --border-strong: rgb(0 49 83 / 22%);
+  --text-primary: #1d2c34;
+  --text-secondary: #58676f;
+  --text-tertiary: #78858b;
+  --text-inverse: #ffffff;
+  --border-subtle: var(--fog-gray);
+  --border-strong: #bfc0c0;
+  --border-interactive: #819096;
   --accent-primary: #003153;
   --accent-hover: #002944;
-  --accent-active: #002238;
-  --accent-soft: #dfe7eb;
+  --accent-active: #001f33;
+  --accent-soft: #eaf0f2;
   --focus-ring: rgb(0 49 83 / 32%);
   --success: #3f6b5a;
-  --success-soft: #e7f0eb;
-  --warning: #7e663d;
-  --warning-soft: #f3eee3;
+  --success-soft: #eef3f0;
+  --warning: #80663d;
+  --warning-soft: #f5f0e8;
   --error: #98534e;
-  --error-soft: #f5e9e7;
-  --asset-cash: #b8c4c7;
+  --error-soft: #f6ecea;
+  --asset-cash: #bbc6c8;
   --asset-investment: #536b89;
-  --chart-net-worth: #003153;
-  --chart-cash: #5e858c;
-  --chart-investment: #65758f;
+  --chart-net-worth: var(--accent-primary);
+  --chart-cash: #7c9398;
+  --chart-investment: var(--asset-investment);
+  --chart-income: var(--success);
   --chart-liability: var(--error);
   --radius-compact: 6px;
   --radius-control: 8px;
   --radius-panel: 12px;
   --radius-modal: 16px;
-  --shadow-subtle: 0 1px 2px rgb(18 43 60 / 5%);
-  --shadow-floating: 0 16px 40px rgb(18 43 60 / 10%);
+  --shadow-subtle: 0 1px 2px rgb(0 49 83 / 5%);
+  --shadow-floating: 0 16px 40px rgb(0 49 83 / 10%);
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -97,7 +100,7 @@ button:disabled {
 }
 
 :focus-visible {
-  outline: 2px solid var(--focus-ring);
+  outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
 }
 
@@ -153,7 +156,7 @@ button:disabled {
 
 .page-intro h1 {
   margin: 0;
-  color: var(--accent-hover);
+  color: var(--text-primary);
   font-size: clamp(1.75rem, 4vw, 2.5rem);
   font-weight: 600;
   letter-spacing: -0.04em;
@@ -307,7 +310,7 @@ button:disabled {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-control);
   color: var(--text-primary);
-  background: transparent;
+  background: var(--surface-primary);
   font-size: 24px;
   line-height: 1;
   text-decoration: none;
@@ -318,9 +321,11 @@ button:disabled {
     background-color var(--motion-fast) var(--ease-standard);
 }
 
-.month-switcher-arrow:hover {
-  border-color: var(--border-strong);
-  background: var(--surface-subtle);
+.month-switcher-arrow:hover,
+.month-switcher-arrow:focus-visible {
+  border-color: var(--accent-primary);
+  color: var(--accent-hover);
+  background: var(--accent-soft);
 }
 
 .review-summary {
@@ -531,9 +536,9 @@ button:disabled {
 }
 
 .consistency-difference-warning {
-  border-color: color-mix(in srgb, var(--accent-primary) 24%, transparent);
-  color: var(--accent-hover);
-  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--warning) 24%, transparent);
+  color: var(--warning);
+  background: var(--warning-soft);
 }
 
 .review-section {
@@ -683,7 +688,7 @@ button:disabled {
   height: 8px;
   border-radius: var(--radius-compact);
   margin-top: 0.65rem;
-  background: var(--surface-subtle);
+  background: var(--fog-gray);
 }
 
 .asset-bar-cash {
@@ -816,19 +821,19 @@ button:disabled {
   overflow: hidden;
   height: 0.5rem;
   border-radius: 999px;
-  background: var(--border-subtle);
+  background: var(--fog-gray);
 }
 
 .allocation-bar span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--accent-primary);
+  background: var(--asset-investment);
 }
 
 .allocation-row strong {
   min-width: 3rem;
-  color: var(--accent-hover);
+  color: var(--asset-investment);
   font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -1162,7 +1167,7 @@ button:disabled {
 }
 
 .trend-series-income {
-  color: var(--accent-hover);
+  color: var(--chart-income);
 }
 
 .history-table-details {
@@ -1504,7 +1509,7 @@ select {
   width: 100%;
   min-width: 0;
   min-height: 44px;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-interactive);
   border-radius: var(--radius-control);
   color: var(--text-primary);
   background: var(--surface-primary);
@@ -1673,7 +1678,7 @@ select[aria-invalid="true"] {
 .secondary-button {
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
-  background: transparent;
+  background: var(--surface-primary);
   box-shadow: none;
 }
 
@@ -1701,6 +1706,12 @@ select[aria-invalid="true"] {
   margin: -0.45rem 0 1rem;
   color: var(--text-secondary);
   font-size: 0.8125rem;
+}
+
+.primary-button:active:not(:disabled),
+.retry-button:active:not(:disabled) {
+  border-color: var(--accent-active);
+  background: var(--accent-active);
 }
 
 .primary-button:active:not(:disabled),
@@ -1762,7 +1773,7 @@ select[aria-invalid="true"] {
 
 .data-safety-eyebrow {
   margin: 0 0 0.35rem;
-  color: var(--accent-hover);
+  color: var(--text-secondary);
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.08em;

@@ -4,13 +4,16 @@ import { describe, expect, it } from "vitest";
 const css = readFileSync(new URL("./globals.css", import.meta.url), "utf8");
 
 describe("fixed design system", () => {
-  it("defines the approved cool editorial finance tokens", () => {
-    expect(css).toContain("--background-primary: #f6f8fa");
-    expect(css).toContain("--surface-primary: #fbfcfd");
-    expect(css).toContain("--text-primary: #24313a");
-    expect(css).toContain("--accent-primary: #5d7588");
-    expect(css).toContain("--asset-cash: #6f9f9e");
-    expect(css).toContain("--asset-investment: #5f6fa3");
+  it("defines the approved Prussian blue and fog gray finance tokens", () => {
+    expect(css).toContain("--background-primary: #f2f4f3");
+    expect(css).toContain("--background-secondary: #e8ebeb");
+    expect(css).toContain("--surface-primary: #f8faf9");
+    expect(css).toContain("--text-primary: #202b31");
+    expect(css).toContain("--accent-primary: #003153");
+    expect(css).toContain("--accent-soft: #dfe7eb");
+    expect(css).toContain("--asset-cash: #6f9399");
+    expect(css).toContain("--asset-investment: #536b89");
+    expect(css).toContain("--chart-net-worth: #003153");
     expect(css).toContain("--radius-control: 8px");
     expect(css).toContain("--motion-normal: 180ms");
   });

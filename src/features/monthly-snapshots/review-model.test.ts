@@ -5,6 +5,7 @@ import type { MonthlySnapshotInput } from "@/features/monthly-snapshots/reposito
 import {
   calculateAssetAllocation,
   calculateInvestmentAllocation,
+  calculateMonthlyConsistency,
   calculateMonthlyReview,
   calculateMonthlyTrend,
 } from "@/features/monthly-snapshots/review-model";
@@ -126,6 +127,64 @@ describe("calculateMonthlyReview", () => {
 
     expect(review.assets.cashCents).toBe(BigInt("27021597764222973"));
     expect(review.assets.netWorthCents).toBe(BigInt("27021597764222973"));
+  });
+});
+
+describe("calculateMonthlyConsistency", () => {
+  it("calculates unexplained net-worth and investment changes from the previous saved month", () => {
+    const previous: MonthlySnapshotInput = {
+      ...snapshot,
+      month: "2026-07",
+      cash: {
+        emergencyFundCents: 600_000,
+        goalFundCents: 300_000,
+        dailyCashCents: 100_000,
+      },
+      funds: [
+        {
+          ...snapshot.funds[0],
+          marketValueCents: 2_000_000,
+          monthlyInvestmentCents: 0,
+        },
+      ],
+      liabilities: { huabeiBalanceCents: 200_000 },
+    };
+    const current: MonthlySnapshotInput = {
+      ...snapshot,
+      cashFlow: {
+        incomeCents: 1_500_000,
+        expenseCents: 500_000,
+        investmentProfitLossCents: 200_000,
+        investmentContributionCents: 300_000,
+      },
+      cash: {
+        emergencyFundCents: 900_000,
+        goalFundCents: 300_000,
+        dailyCashCents: 200_000,
+      },
+      funds: [
+        {
+          ...snapshot.funds[0],
+          marketValueCents: 2_600_000,
+          monthlyInvestmentCents: 300_000,
+        },
+      ],
+      liabilities: { huabeiBalanceCents: 100_000 },
+    };
+
+    expect(calculateMonthlyConsistency(current, previous)).toEqual({
+      previousMonth: "2026-07",
+      netWorthChangeCents: BigInt(1_100_000),
+      explainedNetWorthChangeCents: BigInt(1_200_000),
+      unexplainedNetWorthChangeCents: BigInt(-100_000),
+      investmentChangeCents: BigInt(600_000),
+      explainedInvestmentChangeCents: BigInt(500_000),
+      unexplainedInvestmentChangeCents: BigInt(100_000),
+    });
+  });
+
+  it("does not invent cross-month differences for the first saved record", () => {
+    expect(calculateMonthlyConsistency(snapshot, null)).toBeNull();
   });
 });
 

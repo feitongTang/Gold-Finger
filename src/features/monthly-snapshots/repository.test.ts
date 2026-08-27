@@ -165,6 +165,50 @@ describe("monthly snapshot repository", () => {
     expect(repository.findAll()).toEqual([august, september]);
   });
 
+  it("deletes only the selected month and cascades its child rows", () => {
+    const repository = createMonthlySnapshotRepository(connection.db);
+    const august = repository.create(augustSnapshot);
+    const september = repository.create(septemberSnapshot);
+
+    expect(repository.deleteByMonth("2026-08")).toBe(true);
+    expect(repository.deleteByMonth("2026-08")).toBe(false);
+    expect(repository.findAll()).toEqual([september]);
+    expect(
+      connection.sqlite
+        .prepare(
+          "select count(*) as count from fund_assets where snapshot_id = ?",
+        )
+        .get(august.id),
+    ).toEqual({ count: 0 });
+  });
+
+  it("replaces every saved month in one operation", () => {
+    const repository = createMonthlySnapshotRepository(connection.db);
+    repository.create(augustSnapshot);
+
+    repository.replaceAll([septemberSnapshot]);
+
+    expect(repository.findAll()).toEqual([
+      { id: expect.any(Number), ...septemberSnapshot },
+    ]);
+  });
+
+  it("rolls back a full replacement when any imported month is invalid", () => {
+    const repository = createMonthlySnapshotRepository(connection.db);
+    const august = repository.create(augustSnapshot);
+
+    expect(() =>
+      repository.replaceAll([
+        septemberSnapshot,
+        {
+          ...augustSnapshot,
+          cash: { ...augustSnapshot.cash, emergencyFundCents: -1 },
+        },
+      ]),
+    ).toThrow(/CHECK constraint failed/);
+    expect(repository.findAll()).toEqual([august]);
+  });
+
   it("rolls back the complete create when a child amount is invalid", () => {
     const repository = createMonthlySnapshotRepository(connection.db);
 

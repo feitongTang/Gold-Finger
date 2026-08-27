@@ -202,6 +202,39 @@ export function calculateMonthlyReview(snapshot: MonthlySnapshotInput) {
   };
 }
 
+export function calculateMonthlyConsistency(
+  snapshot: MonthlySnapshotInput,
+  previousSnapshot: MonthlySnapshotInput | null,
+) {
+  if (!previousSnapshot) return null;
+
+  const current = calculateMonthlyReview(snapshot);
+  const previous = calculateMonthlyReview(previousSnapshot);
+  const netWorthChangeCents =
+    current.assets.netWorthCents - previous.assets.netWorthCents;
+  const explainedNetWorthChangeCents =
+    current.cashFlow.incomeCents -
+    current.cashFlow.expenseCents +
+    current.cashFlow.investmentProfitLossCents;
+  const investmentChangeCents =
+    current.assets.investmentCents - previous.assets.investmentCents;
+  const explainedInvestmentChangeCents =
+    current.cashFlow.investmentContributionCents +
+    current.cashFlow.investmentProfitLossCents;
+
+  return {
+    previousMonth: previousSnapshot.month,
+    netWorthChangeCents,
+    explainedNetWorthChangeCents,
+    unexplainedNetWorthChangeCents:
+      netWorthChangeCents - explainedNetWorthChangeCents,
+    investmentChangeCents,
+    explainedInvestmentChangeCents,
+    unexplainedInvestmentChangeCents:
+      investmentChangeCents - explainedInvestmentChangeCents,
+  };
+}
+
 export function calculateMonthlyTrend(
   snapshots: ReadonlyArray<MonthlySnapshotInput>,
 ) {

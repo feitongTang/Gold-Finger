@@ -124,15 +124,22 @@ export function createMonthlySnapshotRepository(db: DatabaseClient) {
     }
   }
 
+  function insertSnapshot(
+    transaction: Parameters<Parameters<DatabaseClient["transaction"]>[0]>[0],
+    input: MonthlySnapshotInput,
+  ) {
+    const snapshot = transaction
+      .insert(monthlySnapshots)
+      .values({ month: input.month, ...input.cashFlow })
+      .returning({ id: monthlySnapshots.id })
+      .get();
+
+    insertChildren(transaction, snapshot.id, input);
+  }
+
   function create(input: MonthlySnapshotInput): MonthlySnapshot {
     db.transaction((transaction) => {
-      const snapshot = transaction
-        .insert(monthlySnapshots)
-        .values({ month: input.month, ...input.cashFlow })
-        .returning({ id: monthlySnapshots.id })
-        .get();
-
-      insertChildren(transaction, snapshot.id, input);
+      insertSnapshot(transaction, input);
     });
 
     return findByMonth(input.month) as MonthlySnapshot;
@@ -183,5 +190,20 @@ export function createMonthlySnapshotRepository(db: DatabaseClient) {
     return wasUpdated ? findByMonth(input.month) : null;
   }
 
-  return { create, update, findByMonth, findAll };
+  function deleteByMonth(month: string) {
+    const result = db
+      .delete(monthlySnapshots)
+      .where(eq(monthlySnapshots.month, month))
+      .run();
+    return result.changes > 0;
+  }
+
+  function replaceAll(inputs: ReadonlyArray<MonthlySnapshotInput>) {
+    db.transaction((transaction) => {
+      transaction.delete(monthlySnapshots).run();
+      for (const input of inputs) insertSnapshot(transaction, input);
+    });
+  }
+
+  return { create, update, deleteByMonth, findByMonth, findAll, replaceAll };
 }

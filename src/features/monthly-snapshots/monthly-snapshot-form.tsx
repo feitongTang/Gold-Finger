@@ -1,12 +1,21 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import {
+  useActionState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { saveMonthlySnapshotAction } from "@/features/monthly-snapshots/actions";
+import { OPEN_MONTHLY_ENTRY_EVENT } from "@/features/monthly-snapshots/monthly-entry-trigger";
 import {
   canAddFund,
   formatCentsAsYuan,
   formatMonthlyInvestmentLabel,
+  getMonthlySnapshotErrorSummary,
   initialMonthlySnapshotFormState,
   MAX_FUNDS,
 } from "@/features/monthly-snapshots/form-model";
@@ -59,6 +68,17 @@ type MoneyFieldProps = {
   allowNegative?: boolean;
   allowExpression?: boolean;
 };
+
+const NON_FOCUSABLE_ERROR_FIELDS = new Set([
+  "month",
+  "fundCount",
+  "fundInvestmentTotal",
+]);
+
+function focusAndReveal(element: HTMLElement) {
+  element.focus({ preventScroll: true });
+  element.scrollIntoView({ behavior: "smooth", block: "center" });
+}
 
 function MoneyField({
   name,
@@ -140,6 +160,8 @@ export function MonthlySnapshotForm({
     initialMonthlySnapshotFormState,
   );
   const [isOpen, setIsOpen] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const statusRef = useRef<HTMLDivElement>(null);
   const fundSource = JSON.stringify(initialFunds);
   const [fundState, setFundState] = useState(() => ({
     source: fundSource,
@@ -151,6 +173,10 @@ export function MonthlySnapshotForm({
   const fundRows = fundState.rows;
   const nextFundId = useRef(fundRows.length);
   const errors = state.fieldErrors;
+  const errorSummary = useMemo(
+    () => getMonthlySnapshotErrorSummary(errors),
+    [errors],
+  );
   const centsValue = (cents: number | undefined) =>
     formatCentsAsYuan(cents ?? 0);
   const fieldValue = (name: string, fallback: string) =>
@@ -163,6 +189,60 @@ export function MonthlySnapshotForm({
     : fundLimitReached
       ? `每个月最多添加 ${MAX_FUNDS} 只基金。`
       : undefined;
+
+  const findField = useCallback((field: string) => {
+    const control = formRef.current?.elements.namedItem(field);
+    return control instanceof HTMLElement &&
+      (!(control instanceof HTMLInputElement) || control.type !== "hidden")
+      ? control
+      : null;
+  }, []);
+
+  function focusField(field: string) {
+    const control = findField(field);
+    if (control) focusAndReveal(control);
+  }
+
+  const openForm = useCallback(() => {
+    setIsOpen(true);
+    requestAnimationFrame(() => {
+      const firstError = errorSummary[0];
+      const firstErrorField = firstError ? findField(firstError.field) : null;
+      const firstField = formRef.current?.querySelector<HTMLElement>(
+        'input:not([type="hidden"]), select',
+      );
+      const target =
+        state.status === "error"
+          ? (firstErrorField ?? statusRef.current)
+          : firstField;
+      if (target) focusAndReveal(target);
+    });
+  }, [errorSummary, findField, state.status]);
+
+  useEffect(() => {
+    window.addEventListener(OPEN_MONTHLY_ENTRY_EVENT, openForm);
+    return () => window.removeEventListener(OPEN_MONTHLY_ENTRY_EVENT, openForm);
+  }, [openForm]);
+
+  useEffect(() => {
+    if (state.status === "idle") return;
+
+    const frame = requestAnimationFrame(() => {
+      if (state.status === "success") {
+        setIsOpen(false);
+        const resultHeading = document.getElementById("review-title");
+        if (resultHeading) focusAndReveal(resultHeading);
+        return;
+      }
+
+      setIsOpen(true);
+      const firstError = errorSummary[0];
+      const firstErrorField = firstError ? findField(firstError.field) : null;
+      const target = firstErrorField ?? statusRef.current;
+      if (target) focusAndReveal(target);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [state.status, state.message, errorSummary, findField]);
 
   function addFund() {
     if (!canAddFund(fundRows.length)) return;
@@ -206,20 +286,79 @@ export function MonthlySnapshotForm({
           aria-controls="monthly-entry-form"
           aria-expanded={isOpen}
           className={`primary-button entry-toggle-button${isOpen ? " entry-toggle-button-open" : ""}`}
-          onClick={() => setIsOpen((current) => !current)}
+          onClick={() => (isOpen ? setIsOpen(false) : openForm())}
           type="button"
         >
           {isOpen ? "收起记录" : snapshot ? "更新数据" : "新建数据"}
         </button>
       </section>
+      {state.status !== "idle" ? (
+        <div
+          aria-live="polite"
+          className={`form-message form-status-message form-message-${state.status}`}
+          ref={statusRef}
+          role={
+            state.status === "error" || state.status === "confirmation"
+              ? "alert"
+              : "status"
+          }
+          tabIndex={
+            state.status === "error" || state.status === "confirmation"
+              ? -1
+              : undefined
+          }
+        >
+          <p>{state.message}</p>
+          {state.status === "confirmation" ? (
+            <div className="zero-snapshot-confirmation">
+              <button
+                className="danger-button"
+                disabled={pending}
+                form="monthly-entry-form"
+                name="confirmZeroSnapshot"
+                type="submit"
+                value="yes"
+              >
+                {pending ? "保存中…" : "确认创建全零记录"}
+              </button>
+              <span>如非预期，请继续修改下面的金额或添加基金。</span>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       <form
         action={formAction}
         className="snapshot-form"
         hidden={!isOpen}
         id="monthly-entry-form"
+        noValidate
+        ref={formRef}
       >
         <input name="month" type="hidden" value={month} />
         <input name="fundCount" type="hidden" value={fundRows.length} />
+
+        {errorSummary.length > 0 ? (
+          <div
+            aria-labelledby="monthly-entry-error-title"
+            className="form-error-summary"
+          >
+            <h2 id="monthly-entry-error-title">请修正以下输入</h2>
+            <ul>
+              {errorSummary.map((item) => (
+                <li key={item.field}>
+                  <button
+                    className="form-error-link"
+                    disabled={NON_FOCUSABLE_ERROR_FIELDS.has(item.field)}
+                    onClick={() => focusField(item.field)}
+                    type="button"
+                  >
+                    {item.label}：{item.message}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         <section className="entry-section" aria-labelledby="cash-flow-title">
           <div className="section-marker" aria-hidden="true">
@@ -472,13 +611,6 @@ export function MonthlySnapshotForm({
           <button className="primary-button" disabled={pending} type="submit">
             {pending ? "保存中…" : snapshot ? "更新月度记录" : "保存月度记录"}
           </button>
-          <p
-            className={`form-message form-message-${state.status}`}
-            role={state.status === "error" ? "alert" : undefined}
-            aria-live="polite"
-          >
-            {state.message}
-          </p>
         </div>
       </form>
     </>

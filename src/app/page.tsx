@@ -3,6 +3,7 @@ import {
   shiftMonth,
 } from "@/features/monthly-snapshots/form-data";
 import { loadMonthlyEntry } from "@/features/monthly-snapshots/data";
+import { DataSafetyPanel } from "@/features/monthly-snapshots/data-safety-panel";
 import {
   MonthlyHistory,
   MonthlyReview,
@@ -33,6 +34,9 @@ export default async function Home({
     (snapshot) =>
       snapshot.month >= historyStartMonth && snapshot.month <= month,
   );
+  const previousSnapshot = snapshots.findLast(
+    (snapshot) => snapshot.month < month,
+  );
 
   return (
     <>
@@ -48,6 +52,7 @@ export default async function Home({
         <MonthlyReview
           categories={categories}
           month={month}
+          previousSnapshot={previousSnapshot}
           snapshot={snapshot}
         />
 
@@ -60,6 +65,8 @@ export default async function Home({
           month={month}
           snapshot={snapshot}
         />
+
+        <DataSafetyPanel />
       </main>
     </>
   );

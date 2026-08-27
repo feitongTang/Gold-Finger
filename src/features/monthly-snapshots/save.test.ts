@@ -23,6 +23,20 @@ function snapshotFormData(expense = "8000") {
   return formData;
 }
 
+function emptySnapshotFormData() {
+  const formData = new FormData();
+  formData.set("month", "2026-08");
+  formData.set("income", "0");
+  formData.set("expense", "0");
+  formData.set("investmentProfitLoss", "0");
+  formData.set("emergencyFund", "0");
+  formData.set("goalFund", "0");
+  formData.set("dailyCash", "0");
+  formData.set("huabeiBalance", "0");
+  formData.set("fundCount", "0");
+  return formData;
+}
+
 let connection: ReturnType<typeof openDatabase>;
 
 beforeEach(() => {
@@ -35,6 +49,39 @@ afterEach(() => {
 });
 
 describe("save monthly snapshot", () => {
+  it("requires explicit confirmation before creating an all-zero month", () => {
+    const repository = createMonthlySnapshotRepository(connection.db);
+    const formData = emptySnapshotFormData();
+
+    expect(saveMonthlySnapshot(() => repository, formData)).toMatchObject({
+      status: "confirmation",
+      message: "所有金额均为 0 且没有基金。确认后将创建一条全零记录。",
+      fieldErrors: {},
+      values: { month: "2026-08", income: "0", fundCount: "0" },
+    });
+    expect(repository.findByMonth("2026-08")).toBeNull();
+
+    formData.set("confirmZeroSnapshot", "yes");
+
+    expect(saveMonthlySnapshot(() => repository, formData)).toMatchObject({
+      status: "success",
+      message: "2026-08 已保存",
+    });
+    expect(repository.findByMonth("2026-08")).not.toBeNull();
+  });
+
+  it("does not require confirmation when updating an existing all-zero month", () => {
+    const repository = createMonthlySnapshotRepository(connection.db);
+    const formData = emptySnapshotFormData();
+    formData.set("confirmZeroSnapshot", "yes");
+    saveMonthlySnapshot(() => repository, formData);
+    formData.delete("confirmZeroSnapshot");
+
+    expect(saveMonthlySnapshot(() => repository, formData).status).toBe(
+      "success",
+    );
+  });
+
   it("creates a month that does not exist", () => {
     const repository = createMonthlySnapshotRepository(connection.db);
 

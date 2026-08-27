@@ -7,6 +7,17 @@ type MonthlySnapshotRepository = Pick<
   "create" | "findByMonth" | "update"
 >;
 
+function isAllZeroSnapshot(
+  snapshot: Parameters<MonthlySnapshotRepository["create"]>[0],
+) {
+  return (
+    snapshot.funds.length === 0 &&
+    Object.values(snapshot.cashFlow).every((amount) => amount === 0) &&
+    Object.values(snapshot.cash).every((amount) => amount === 0) &&
+    snapshot.liabilities.huabeiBalanceCents === 0
+  );
+}
+
 function formValues(formData: FormData) {
   const values: Record<string, string> = {};
   for (const [field, value] of formData.entries()) {
@@ -34,6 +45,18 @@ export function saveMonthlySnapshot(
   try {
     const repository = getRepository();
     const existing = repository.findByMonth(parsed.value.month);
+    if (
+      !existing &&
+      isAllZeroSnapshot(parsed.value) &&
+      formData.get("confirmZeroSnapshot") !== "yes"
+    ) {
+      return {
+        status: "confirmation",
+        message: "所有金额均为 0 且没有基金。确认后将创建一条全零记录。",
+        fieldErrors: {},
+        values,
+      };
+    }
     if (existing) repository.update(parsed.value);
     else repository.create(parsed.value);
 

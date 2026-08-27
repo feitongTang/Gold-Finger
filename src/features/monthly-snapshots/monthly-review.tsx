@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { InvestmentCategoryId } from "@/db/schema";
 import { shiftMonth } from "@/features/monthly-snapshots/form-data";
 import { InvestmentAllocation } from "@/features/monthly-snapshots/investment-allocation";
+import { MonthlyEntryTrigger } from "@/features/monthly-snapshots/monthly-entry-trigger";
+import { MonthlyRecordActions } from "@/features/monthly-snapshots/monthly-record-actions";
 import {
   MonthlyTrendCharts,
   type SerializableMonthlyTrendPoint,
@@ -11,6 +13,7 @@ import type { MonthlySnapshot } from "@/features/monthly-snapshots/repository";
 import {
   calculateAssetAllocation,
   calculateInvestmentAllocation,
+  calculateMonthlyConsistency,
   calculateMonthlyReview,
   calculateMonthlyTrend,
 } from "@/features/monthly-snapshots/review-model";
@@ -53,9 +56,9 @@ function formatDelta(cents: bigint) {
   return `${prefix}${formatMoney(cents)}`;
 }
 
-function amountDirection(cents: bigint) {
-  if (cents > BigInt(0)) return "positive";
-  if (cents < BigInt(0)) return "negative";
+function amountDirection(cents: bigint, lowerIsBetter = false) {
+  if (cents > BigInt(0)) return lowerIsBetter ? "negative" : "positive";
+  if (cents < BigInt(0)) return lowerIsBetter ? "positive" : "negative";
   return "neutral";
 }
 
@@ -87,10 +90,12 @@ function MonthSwitcher({ month }: { month: string }) {
 export function MonthlyReview({
   month,
   snapshot,
+  previousSnapshot = null,
   categories,
 }: {
   month: string;
   snapshot: MonthlySnapshot | null;
+  previousSnapshot?: MonthlySnapshot | null;
   categories: ReadonlyArray<CategoryOption>;
 }) {
   if (!snapshot) {
@@ -102,11 +107,16 @@ export function MonthlyReview({
         <div className="review-heading">
           <div>
             <p className="review-eyebrow">{formatMonth(month)}月度复盘</p>
-            <h2 id="review-title">本月结果</h2>
+            <h2 id="review-title" tabIndex={-1}>
+              本月结果
+            </h2>
           </div>
-          <div className="net-worth-summary net-worth-summary-empty">
-            <span>当前净资产</span>
-            <strong aria-label="当前净资产尚未记录">—</strong>
+          <div className="review-heading-actions">
+            <div className="net-worth-summary net-worth-summary-empty">
+              <span>当前净资产</span>
+              <strong aria-label="当前净资产尚未记录">—</strong>
+            </div>
+            <MonthlyEntryTrigger label="新建数据" />
           </div>
         </div>
         <MonthSwitcher month={month} />
@@ -136,20 +146,75 @@ export function MonthlyReview({
     review.investmentCategories,
     categories,
   );
+  const consistency = calculateMonthlyConsistency(snapshot, previousSnapshot);
   return (
     <section className="review-panel" aria-labelledby="review-title">
       <div className="review-heading">
         <div>
           <p className="review-eyebrow">{formatMonth(month)}月度复盘</p>
-          <h2 id="review-title">本月结果</h2>
+          <h2 id="review-title" tabIndex={-1}>
+            本月结果
+          </h2>
         </div>
-        <div className="net-worth-summary">
-          <span>当前净资产</span>
-          <strong>{formatMoney(review.assets.netWorthCents)}</strong>
+        <div className="review-heading-actions">
+          <div className="net-worth-summary">
+            <span>当前净资产</span>
+            <strong>{formatMoney(review.assets.netWorthCents)}</strong>
+          </div>
+          <div className="review-record-actions">
+            <MonthlyEntryTrigger label="更新数据" />
+            <MonthlyRecordActions month={month} />
+          </div>
         </div>
       </div>
 
       <MonthSwitcher month={month} />
+
+      {consistency ? (
+        <section
+          aria-labelledby="consistency-review-title"
+          className="consistency-review"
+        >
+          <div className="review-section-heading consistency-review-heading">
+            <div>
+              <h3 id="consistency-review-title">跨月一致性</h3>
+              <p>{`与 ${formatMonth(consistency.previousMonth)}的最近一条前序记录比较`}</p>
+            </div>
+            <span>仅作复核提示，不影响保存</span>
+          </div>
+          <dl className="consistency-grid">
+            <div className="consistency-card">
+              <dt>净资产变化</dt>
+              <dd>{formatDelta(consistency.netWorthChangeCents)}</dd>
+              <dd className="consistency-explanation">
+                收入 − 支出 + 投资损益可解释：
+                {formatDelta(consistency.explainedNetWorthChangeCents)}
+                ；投资净投入视为资产内部转移
+              </dd>
+              <dd
+                className={`consistency-difference consistency-difference-${consistency.unexplainedNetWorthChangeCents === BigInt(0) ? "matched" : "warning"}`}
+              >
+                净资产可解释差额：
+                {formatDelta(consistency.unexplainedNetWorthChangeCents)}
+              </dd>
+            </div>
+            <div className="consistency-card">
+              <dt>投资市值变化</dt>
+              <dd>{formatDelta(consistency.investmentChangeCents)}</dd>
+              <dd className="consistency-explanation">
+                本月净投入 + 投资损益可解释：
+                {formatDelta(consistency.explainedInvestmentChangeCents)}
+              </dd>
+              <dd
+                className={`consistency-difference consistency-difference-${consistency.unexplainedInvestmentChangeCents === BigInt(0) ? "matched" : "warning"}`}
+              >
+                投资市值解释差额：
+                {formatDelta(consistency.unexplainedInvestmentChangeCents)}
+              </dd>
+            </div>
+          </dl>
+        </section>
+      ) : null}
 
       <div className="review-overview-grid">
         <div
@@ -336,16 +401,17 @@ export function MonthlyHistory({
                   {trend.map((point, index) => {
                     const previous = trend[index - 1];
                     const metrics = [
-                      [point.netWorthCents, previous?.netWorthCents],
-                      [point.incomeCents, previous?.incomeCents],
-                      [point.expenseCents, previous?.expenseCents],
+                      [point.netWorthCents, previous?.netWorthCents, false],
+                      [point.incomeCents, previous?.incomeCents, false],
+                      [point.expenseCents, previous?.expenseCents, true],
                       [
                         point.cashFlowBalanceCents,
                         previous?.cashFlowBalanceCents,
+                        false,
                       ],
-                      [point.cashCents, previous?.cashCents],
-                      [point.investmentCents, previous?.investmentCents],
-                      [point.liabilityCents, previous?.liabilityCents],
+                      [point.cashCents, previous?.cashCents, false],
+                      [point.investmentCents, previous?.investmentCents, false],
+                      [point.liabilityCents, previous?.liabilityCents, true],
                     ] as const;
 
                     return (
@@ -355,25 +421,30 @@ export function MonthlyHistory({
                             {formatMonth(point.month)}
                           </Link>
                         </th>
-                        {metrics.map(([value, previousValue], metricIndex) => {
-                          const delta =
-                            previousValue === undefined
-                              ? null
-                              : value - previousValue;
+                        {metrics.map(
+                          (
+                            [value, previousValue, lowerIsBetter],
+                            metricIndex,
+                          ) => {
+                            const delta =
+                              previousValue === undefined
+                                ? null
+                                : value - previousValue;
 
-                          return (
-                            <td key={metricIndex}>
-                              <strong>{formatMoney(value)}</strong>
-                              <span
-                                className={`history-delta history-delta-${delta === null ? "neutral" : amountDirection(delta)}`}
-                              >
-                                {delta === null
-                                  ? "起始记录"
-                                  : formatDelta(delta)}
-                              </span>
-                            </td>
-                          );
-                        })}
+                            return (
+                              <td key={metricIndex}>
+                                <strong>{formatMoney(value)}</strong>
+                                <span
+                                  className={`history-delta history-delta-${delta === null ? "neutral" : amountDirection(delta, lowerIsBetter)}`}
+                                >
+                                  {delta === null
+                                    ? "起始记录"
+                                    : formatDelta(delta)}
+                                </span>
+                              </td>
+                            );
+                          },
+                        )}
                       </tr>
                     );
                   })}

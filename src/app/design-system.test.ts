@@ -11,7 +11,7 @@ describe("fixed design system", () => {
     expect(css).toContain("--text-primary: #202b31");
     expect(css).toContain("--accent-primary: #003153");
     expect(css).toContain("--accent-soft: #dfe7eb");
-    expect(css).toContain("--asset-cash: #6f9399");
+    expect(css).toContain("--asset-cash: #b8c4c7");
     expect(css).toContain("--asset-investment: #536b89");
     expect(css).toContain("--chart-net-worth: #003153");
     expect(css).toContain("--radius-control: 8px");

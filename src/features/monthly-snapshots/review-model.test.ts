@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { INVESTMENT_CATEGORIES } from "@/db/schema";
 import type { MonthlySnapshotInput } from "@/features/monthly-snapshots/repository";
 import {
-  calculateAssetAllocation,
+  calculateAssetSummaryRatios,
   calculateInvestmentAllocation,
   calculateMonthlyConsistency,
   calculateMonthlyReview,
@@ -191,7 +191,7 @@ describe("calculateMonthlyConsistency", () => {
 describe("calculateAssetAllocation", () => {
   it("does not report a liability percentage without an asset base", () => {
     expect(
-      calculateAssetAllocation(BigInt(0), BigInt(0), BigInt(120_000)),
+      calculateAssetSummaryRatios(BigInt(0), BigInt(0), BigInt(120_000)),
     ).toEqual({
       cashPercent: 0,
       investmentPercent: 0,
@@ -200,7 +200,9 @@ describe("calculateAssetAllocation", () => {
   });
 
   it("keeps rounded cash and investment shares at a combined 100 percent", () => {
-    expect(calculateAssetAllocation(BigInt(1), BigInt(7), BigInt(0))).toEqual({
+    expect(
+      calculateAssetSummaryRatios(BigInt(1), BigInt(7), BigInt(0)),
+    ).toEqual({
       cashPercent: 13,
       investmentPercent: 87,
       liabilityPercent: 0,
@@ -209,118 +211,192 @@ describe("calculateAssetAllocation", () => {
 });
 
 describe("calculateInvestmentAllocation", () => {
-  it("builds drill-down shares for asset classes, markets, and fixed categories", () => {
-    const review = calculateMonthlyReview({
-      ...snapshot,
-      funds: [
-        ...snapshot.funds,
-        {
-          name: "标普基金",
-          category: "us-sp-500",
-          marketValueCents: 500_000,
-          monthlyInvestmentCents: 0,
-        },
-        {
-          name: "日本基金",
-          category: "japan-market",
-          marketValueCents: 500_000,
-          monthlyInvestmentCents: 0,
-        },
-      ],
-    });
+  const category = (
+    id: MonthlySnapshotInput["funds"][number]["category"],
+    marketValueCents: number,
+    fundCount = 1,
+  ) => ({
+    category: id,
+    marketValueCents: BigInt(marketValueCents),
+    monthlyInvestmentCents: BigInt(0),
+    fundCount,
+  });
 
+  it("uses all configurable assets as the denominator for the four top-level classes", () => {
+    const allocation = calculateInvestmentAllocation(
+      {
+        emergencyFundCents: BigInt(1_000),
+        goalFundCents: BigInt(600),
+        dailyCashCents: BigInt(400),
+      },
+      [
+        category("us-nasdaq-100", 5_200),
+        category("china-bonds", 1_800),
+        category("gold", 1_000),
+      ],
+      INVESTMENT_CATEGORIES,
+    );
+
+    expect(allocation.totalCents).toBe(BigInt(10_000));
     expect(
-      calculateInvestmentAllocation(
-        review.investmentCategories,
-        INVESTMENT_CATEGORIES,
-      ),
+      allocation.items.map(({ label, totalPercentage }) => ({
+        label,
+        totalPercentage,
+      })),
     ).toEqual([
-      {
-        id: "asset-class:权益类",
-        label: "权益类",
-        percentage: 83,
-        children: [
-          {
-            id: "market:美国市场",
-            label: "美国市场",
-            percentage: 80,
-            children: [
-              {
-                id: "category:us-nasdaq-100",
-                label: "纳斯达克100",
-                percentage: 75,
-                children: [],
-              },
-              {
-                id: "category:us-sp-500",
-                label: "标普500",
-                percentage: 25,
-                children: [],
-              },
-            ],
-          },
-          {
-            id: "category:japan-market",
-            label: "日本市场",
-            percentage: 20,
-            children: [],
-          },
-        ],
-      },
-      {
-        id: "asset-class:其他资产",
-        label: "其他资产",
-        percentage: 17,
-        children: [
-          {
-            id: "category:gold",
-            label: "黄金",
-            percentage: 100,
-            children: [],
-          },
-        ],
-      },
+      { label: "股票", totalPercentage: 52 },
+      { label: "债券", totalPercentage: 18 },
+      { label: "其他", totalPercentage: 10 },
+      { label: "现金", totalPercentage: 20 },
     ]);
   });
 
-  it("keeps zero-value holdings visible without inventing a percentage", () => {
-    const review = calculateMonthlyReview({
-      ...snapshot,
-      funds: [
-        {
-          ...snapshot.funds[0],
-          marketValueCents: 0,
-        },
+  it("keeps the displayed top-level shares at a combined 100 percent after rounding", () => {
+    const allocation = calculateInvestmentAllocation(
+      {
+        emergencyFundCents: BigInt(0),
+        goalFundCents: BigInt(0),
+        dailyCashCents: BigInt(0),
+      },
+      [
+        category("us-nasdaq-100", 1),
+        category("china-bonds", 1),
+        category("gold", 1),
       ],
-    });
+      INVESTMENT_CATEGORIES,
+    );
 
     expect(
-      calculateInvestmentAllocation(
-        review.investmentCategories,
-        INVESTMENT_CATEGORIES,
+      allocation.items.reduce(
+        (total, item) => total + Math.round(item.totalPercentage * 10),
+        0,
       ),
-    ).toEqual([
-      {
-        id: "asset-class:权益类",
-        label: "权益类",
-        percentage: 0,
-        children: [
-          {
-            id: "market:美国市场",
-            label: "美国市场",
-            percentage: 0,
-            children: [
-              {
-                id: "category:us-nasdaq-100",
-                label: "纳斯达克100",
-                percentage: 0,
-                children: [],
-              },
-            ],
-          },
-        ],
-      },
+    ).toBe(1_000);
+    expect(allocation.items.map((item) => item.totalPercentage)).toEqual([
+      33.4, 33.3, 33.3, 0,
     ]);
+  });
+
+  it("keeps the total denominator while also reporting the direct-parent share", () => {
+    const allocation = calculateInvestmentAllocation(
+      {
+        emergencyFundCents: BigInt(2_000),
+        goalFundCents: BigInt(0),
+        dailyCashCents: BigInt(0),
+      },
+      [
+        category("us-nasdaq-100", 800),
+        category("us-sp-500", 800),
+        category("japan-market", 3_600),
+        category("china-bonds", 1_800),
+        category("gold", 1_000),
+      ],
+      INVESTMENT_CATEGORIES,
+    );
+    const stocks = allocation.items[0];
+    const unitedStates = stocks.children.find(
+      (item) => item.label === "美国市场",
+    );
+    const nasdaq = unitedStates?.children.find(
+      (item) => item.label === "纳斯达克100",
+    );
+
+    expect(unitedStates).toMatchObject({
+      amountCents: BigInt(1_600),
+      totalPercentage: 16,
+      parentPercentage: 30.8,
+    });
+    expect(nasdaq).toMatchObject({
+      amountCents: BigInt(800),
+      totalPercentage: 8,
+      parentPercentage: 50,
+    });
+  });
+
+  it("exposes one aggregated fixed-category node instead of individual funds", () => {
+    const review = calculateMonthlyReview(snapshot);
+    const allocation = calculateInvestmentAllocation(
+      {
+        emergencyFundCents: BigInt(snapshot.cash.emergencyFundCents),
+        goalFundCents: BigInt(snapshot.cash.goalFundCents),
+        dailyCashCents: BigInt(snapshot.cash.dailyCashCents),
+      },
+      review.investmentCategories,
+      INVESTMENT_CATEGORIES,
+    );
+    const nasdaq = allocation.items[0].children[0].children[0];
+
+    expect(nasdaq).toMatchObject({
+      label: "纳斯达克100",
+      amountCents: BigInt(1_500_000),
+    });
+    expect(nasdaq.children).toEqual([]);
+  });
+
+  it("adds the three cash purposes with total and cash-relative percentages", () => {
+    const allocation = calculateInvestmentAllocation(
+      {
+        emergencyFundCents: BigInt(1_000),
+        goalFundCents: BigInt(600),
+        dailyCashCents: BigInt(400),
+      },
+      [category("us-nasdaq-100", 8_000)],
+      INVESTMENT_CATEGORIES,
+    );
+    const cash = allocation.items[3];
+
+    expect(cash.children).toEqual([
+      expect.objectContaining({
+        label: "应急储备",
+        totalPercentage: 10,
+        parentPercentage: 50,
+      }),
+      expect.objectContaining({
+        label: "目标储备",
+        totalPercentage: 6,
+        parentPercentage: 30,
+      }),
+      expect.objectContaining({
+        label: "流动资金",
+        totalPercentage: 4,
+        parentPercentage: 20,
+      }),
+    ]);
+  });
+
+  it("keeps a market whose fixed category has the same label as a leaf", () => {
+    const allocation = calculateInvestmentAllocation(
+      {
+        emergencyFundCents: BigInt(0),
+        goalFundCents: BigInt(0),
+        dailyCashCents: BigInt(0),
+      },
+      [category("japan-market", 1_000)],
+      INVESTMENT_CATEGORIES,
+    );
+    const japan = allocation.items[0].children[0];
+
+    expect(japan).toMatchObject({ label: "日本市场", children: [] });
+  });
+
+  it("returns zero percentages and no child rows when every asset is zero", () => {
+    const allocation = calculateInvestmentAllocation(
+      {
+        emergencyFundCents: BigInt(0),
+        goalFundCents: BigInt(0),
+        dailyCashCents: BigInt(0),
+      },
+      [category("us-nasdaq-100", 0)],
+      INVESTMENT_CATEGORIES,
+    );
+
+    expect(allocation.totalCents).toBe(BigInt(0));
+    expect(allocation.items.map((item) => item.totalPercentage)).toEqual([
+      0, 0, 0, 0,
+    ]);
+    expect(allocation.items.every((item) => item.children.length === 0)).toBe(
+      true,
+    );
   });
 });
 

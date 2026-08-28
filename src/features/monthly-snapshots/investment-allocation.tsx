@@ -1,96 +1,211 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties, type KeyboardEvent } from "react";
 
 import type { InvestmentAllocationItem } from "@/features/monthly-snapshots/review-model";
 
+const DEFAULT_EXPANDED_IDS = ["asset-class:stocks", "market:美国市场"] as const;
+
+function formatPercentage(percentage: number) {
+  return Number.isInteger(percentage)
+    ? String(percentage)
+    : percentage.toFixed(1);
+}
+
+function assetTone(item: InvestmentAllocationItem) {
+  if (item.id === "asset-class:stocks") return "stocks";
+  if (item.id === "asset-class:bonds") return "bonds";
+  if (item.id === "asset-class:other") return "other";
+  if (item.id === "asset-class:cash") return "cash";
+  return null;
+}
+
 function AllocationRow({
   item,
-  onSelect,
+  depth,
+  isExpanded,
+  onToggle,
+  parentLabel,
 }: {
   item: InvestmentAllocationItem;
-  onSelect?: () => void;
+  depth: number;
+  isExpanded: boolean;
+  onToggle?: () => void;
+  parentLabel: string | null;
 }) {
+  const childrenId = `allocation-children-${item.id}`;
+  const style = { "--allocation-depth": depth } as CSSProperties;
   const content = (
     <>
-      <span className="allocation-name">{item.label}</span>
-      <span className="allocation-bar" aria-hidden="true">
-        <span style={{ width: `${item.percentage}%` }} />
+      <span className="allocation-name-group">
+        {onToggle ? (
+          <span aria-hidden="true" className="allocation-chevron">
+            {isExpanded ? "⌄" : "›"}
+          </span>
+        ) : (
+          <span aria-hidden="true" className="allocation-chevron-spacer" />
+        )}
+        <span className="allocation-name">{item.label}</span>
       </span>
-      <strong>{item.percentage}%</strong>
-      {onSelect ? (
-        <span className="allocation-chevron" aria-hidden="true">
-          ›
-        </span>
-      ) : null}
+      <span className="allocation-bar" aria-hidden="true">
+        <span style={{ width: `${item.totalPercentage}%` }} />
+      </span>
+      <span className="allocation-percentages">
+        <strong>总体 {formatPercentage(item.totalPercentage)}%</strong>
+        {parentLabel && item.parentPercentage !== null ? (
+          <span>
+            占{parentLabel} {formatPercentage(item.parentPercentage)}%
+          </span>
+        ) : null}
+      </span>
     </>
   );
+  const handleToggleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    onToggle?.();
+  };
 
-  return onSelect ? (
+  return onToggle ? (
     <button
-      aria-label={`查看${item.label}的下一级分类`}
+      aria-controls={childrenId}
+      aria-expanded={isExpanded}
+      aria-label={`${isExpanded ? "收起" : "展开"}${item.label}`}
       className="allocation-row allocation-row-button"
-      onClick={onSelect}
+      onClick={onToggle}
+      onKeyDown={handleToggleKeyDown}
+      style={style}
       type="button"
     >
       {content}
     </button>
   ) : (
-    <div className="allocation-row">{content}</div>
+    <div className="allocation-row" style={style}>
+      {content}
+    </div>
   );
 }
 
-export function InvestmentAllocation({
+function AllocationTree({
   items,
+  depth,
+  expandedIds,
+  onToggle,
+  parentLabel,
 }: {
   items: InvestmentAllocationItem[];
+  depth: number;
+  expandedIds: ReadonlySet<string>;
+  onToggle: (id: string) => void;
+  parentLabel: string | null;
 }) {
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const selectedItems: InvestmentAllocationItem[] = [];
-  let visibleItems = items;
+  return (
+    <ul className="allocation-list">
+      {items.map((item) => {
+        const tone = depth === 0 ? assetTone(item) : null;
+        const hasChildren = item.children.length > 0;
+        const isExpanded = hasChildren && expandedIds.has(item.id);
+        const childrenId = `allocation-children-${item.id}`;
 
-  for (const selectedId of selectedIds) {
-    const selectedItem = visibleItems.find((item) => item.id === selectedId);
-    if (!selectedItem) break;
-    selectedItems.push(selectedItem);
-    visibleItems = selectedItem.children;
+        return (
+          <li
+            className={tone ? `allocation-tone-${tone}` : undefined}
+            key={item.id}
+          >
+            <AllocationRow
+              depth={depth}
+              isExpanded={isExpanded}
+              item={item}
+              onToggle={hasChildren ? () => onToggle(item.id) : undefined}
+              parentLabel={parentLabel}
+            />
+            {isExpanded ? (
+              <div id={childrenId}>
+                <AllocationTree
+                  depth={depth + 1}
+                  expandedIds={expandedIds}
+                  items={item.children}
+                  onToggle={onToggle}
+                  parentLabel={item.label}
+                />
+              </div>
+            ) : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+export function AssetAllocation({
+  items,
+  totalCents,
+}: {
+  items: InvestmentAllocationItem[];
+  totalCents: bigint;
+}) {
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(
+    () => new Set(DEFAULT_EXPANDED_IDS),
+  );
+
+  if (totalCents === BigInt(0)) {
+    return (
+      <p className="asset-allocation-empty">
+        这个月份还没有可用于计算资产配置的数据。
+      </p>
+    );
   }
 
-  const pathLabel = [
-    "全部投资",
-    ...selectedItems.map((item) => item.label),
-  ].join(" / ");
+  const toggle = (id: string) => {
+    setExpandedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   return (
-    <div className="allocation-drilldown">
-      <div className="allocation-navigation">
-        <p aria-live="polite" className="allocation-path">
-          {pathLabel}
-        </p>
-        {selectedItems.length > 0 ? (
-          <button
-            className="allocation-back"
-            onClick={() => setSelectedIds((current) => current.slice(0, -1))}
-            type="button"
-          >
-            <span aria-hidden="true">←</span> 返回上一级
-          </button>
-        ) : null}
-      </div>
-      <ul className="allocation-list">
-        {visibleItems.map((item) => (
-          <li key={item.id}>
-            <AllocationRow
-              item={item}
-              onSelect={
-                item.children.length > 0
-                  ? () => setSelectedIds((current) => [...current, item.id])
-                  : undefined
-              }
+    <div className="asset-allocation">
+      <figure className="asset-allocation-overview">
+        <figcaption>全部可配置资产</figcaption>
+        <div
+          aria-label={items
+            .map(
+              (item) =>
+                `${item.label} ${formatPercentage(item.totalPercentage)}%`,
+            )
+            .join("，")}
+          className="asset-allocation-overview-bar"
+          role="img"
+        >
+          {items.map((item) => (
+            <span
+              className={`asset-allocation-segment allocation-tone-${assetTone(item)}`}
+              key={item.id}
+              style={{ width: `${item.totalPercentage}%` }}
             />
-          </li>
-        ))}
-      </ul>
+          ))}
+        </div>
+        <ul className="asset-allocation-legend" aria-label="资产配置图例">
+          {items.map((item) => (
+            <li className={`allocation-tone-${assetTone(item)}`} key={item.id}>
+              <span aria-hidden="true" className="asset-allocation-swatch" />
+              <span>{item.label}</span>
+              <strong>{formatPercentage(item.totalPercentage)}%</strong>
+            </li>
+          ))}
+        </ul>
+      </figure>
+      <div className="asset-allocation-tree">
+        <AllocationTree
+          depth={0}
+          expandedIds={expandedIds}
+          items={items}
+          onToggle={toggle}
+          parentLabel={null}
+        />
+      </div>
     </div>
   );
 }

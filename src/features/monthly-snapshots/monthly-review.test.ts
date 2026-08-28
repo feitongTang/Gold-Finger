@@ -128,6 +128,46 @@ describe("MonthlyReview", () => {
     expect(markup).not.toContain("不计入上方总资产构成条");
   });
 
+  it("renders one unified asset allocation view without the two legacy charts", () => {
+    const markup = renderToStaticMarkup(
+      createElement(MonthlyReview, {
+        categories: INVESTMENT_CATEGORIES,
+        month: "2026-07",
+        snapshot: snapshots[1],
+      }),
+    );
+
+    expect(markup).toContain('id="asset-allocation-title"');
+    expect(markup).toContain("资产配置");
+    expect(markup).toContain("股票");
+    expect(markup).toContain("现金");
+    expect(markup).toContain("总体 41.7%");
+    expect(markup).toContain("总体 58.3%");
+    expect(markup).not.toContain("总资产构成");
+    expect(markup).not.toContain("投资组合分类");
+  });
+
+  it("shows an honest allocation empty state when all configurable assets are zero", () => {
+    const markup = renderToStaticMarkup(
+      createElement(MonthlyReview, {
+        categories: INVESTMENT_CATEGORIES,
+        month: "2026-07",
+        snapshot: {
+          ...snapshots[1],
+          cash: {
+            emergencyFundCents: 0,
+            goalFundCents: 0,
+            dailyCashCents: 0,
+          },
+          funds: [],
+        },
+      }),
+    );
+
+    expect(markup).toContain("这个月份还没有可用于计算资产配置的数据");
+    expect(markup).not.toContain('class="asset-allocation-overview-bar"');
+  });
+
   it("shows non-blocking reconciliation differences when a previous record exists", () => {
     const markup = renderToStaticMarkup(
       createElement(MonthlyReview, {

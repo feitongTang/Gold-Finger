@@ -10,13 +10,20 @@ type InvestmentCategorySummary = {
 export type InvestmentAllocationItem = {
   id: string;
   label: string;
-  percentage: number;
+  amountCents: bigint;
+  totalPercentage: number;
+  parentPercentage: number | null;
   children: InvestmentAllocationItem[];
+};
+
+export type InvestmentAllocation = {
+  totalCents: bigint;
+  items: InvestmentAllocationItem[];
 };
 
 type InvestmentCategoryDefinition = {
   id: InvestmentCategorySummary["category"];
-  assetClass: string;
+  assetClass: "权益类" | "固定收益类" | "其他资产";
   market?: string;
   label: string;
 };
@@ -28,11 +35,23 @@ type InvestmentAllocationNode = {
   children: InvestmentAllocationNode[];
 };
 
+type CashAllocation = {
+  emergencyFundCents: bigint;
+  goalFundCents: bigint;
+  dailyCashCents: bigint;
+};
+
+const ASSET_CLASS_DEFINITIONS = [
+  { id: "stocks", sourceLabel: "权益类", label: "股票" },
+  { id: "bonds", sourceLabel: "固定收益类", label: "债券" },
+  { id: "other", sourceLabel: "其他资产", label: "其他" },
+] as const;
+
 function roundedPercent(part: bigint, total: bigint) {
   return Number((part * BigInt(100) + total / BigInt(2)) / total);
 }
 
-export function calculateAssetAllocation(
+export function calculateAssetSummaryRatios(
   cashCents: bigint,
   investmentCents: bigint,
   liabilityCents: bigint,
@@ -74,46 +93,105 @@ function findOrCreateAllocationNode(
   return node;
 }
 
-function finalizeAllocationNodes(
-  nodes: InvestmentAllocationNode[],
-): InvestmentAllocationItem[] {
-  const totalCents = nodes.reduce(
-    (total, node) => total + node.marketValueCents,
-    BigInt(0),
-  );
+function roundedAllocationPercent(part: bigint, total: bigint) {
+  if (total === BigInt(0)) return 0;
 
-  return nodes.map((node) => ({
-    id: node.id,
-    label: node.label,
-    percentage:
-      totalCents === BigInt(0)
-        ? 0
-        : roundedPercent(node.marketValueCents, totalCents),
-    children: finalizeAllocationNodes(node.children),
-  }));
+  return Number((part * BigInt(1_000) + total / BigInt(2)) / total) / 10;
+}
+
+function balancedTopLevelPercentages(
+  nodes: ReadonlyArray<InvestmentAllocationNode>,
+  totalCents: bigint,
+) {
+  if (totalCents === BigInt(0)) return nodes.map(() => 0);
+
+  const shares = nodes.map((node, index) => {
+    const scaled = node.marketValueCents * BigInt(1_000);
+    return {
+      index,
+      tenths: Number(scaled / totalCents),
+      remainder: scaled % totalCents,
+    };
+  });
+  const allocatedTenths = shares.reduce(
+    (total, share) => total + share.tenths,
+    0,
+  );
+  const orderedRemainders = shares.toSorted((left, right) => {
+    if (left.remainder === right.remainder) return left.index - right.index;
+    return left.remainder > right.remainder ? -1 : 1;
+  });
+
+  for (let index = 0; index < 1_000 - allocatedTenths; index += 1) {
+    orderedRemainders[index].tenths += 1;
+  }
+
+  return shares.map((share) => share.tenths / 10);
+}
+
+function finalizeAllocationNode(
+  node: InvestmentAllocationNode,
+  totalCents: bigint,
+  parentCents: bigint | null,
+): InvestmentAllocationItem[] {
+  if (node.marketValueCents === BigInt(0) && parentCents !== null) return [];
+
+  return [
+    {
+      id: node.id,
+      label: node.label,
+      amountCents: node.marketValueCents,
+      totalPercentage: roundedAllocationPercent(
+        node.marketValueCents,
+        totalCents,
+      ),
+      parentPercentage:
+        parentCents === null
+          ? null
+          : roundedAllocationPercent(node.marketValueCents, parentCents),
+      children: node.children.flatMap((child) =>
+        finalizeAllocationNode(child, totalCents, node.marketValueCents),
+      ),
+    },
+  ];
 }
 
 export function calculateInvestmentAllocation(
+  cash: CashAllocation,
   summaries: ReadonlyArray<InvestmentCategorySummary>,
   categories: ReadonlyArray<InvestmentCategoryDefinition>,
-) {
+): InvestmentAllocation {
   const summaryByCategory = new Map(
     summaries.map((summary) => [summary.category, summary]),
   );
-  const assetClasses: InvestmentAllocationNode[] = [];
+  const assetClasses = ASSET_CLASS_DEFINITIONS.map<InvestmentAllocationNode>(
+    ({ id, label }) => ({
+      id: `asset-class:${id}`,
+      label,
+      marketValueCents: BigInt(0),
+      children: [],
+    }),
+  );
+  const assetClassBySourceLabel = new Map(
+    ASSET_CLASS_DEFINITIONS.map((definition, index) => [
+      definition.sourceLabel,
+      assetClasses[index],
+    ]),
+  );
 
   for (const category of categories) {
     const summary = summaryByCategory.get(category.id);
-    if (!summary) continue;
+    if (!summary || summary.marketValueCents === BigInt(0)) continue;
 
-    const assetClass = findOrCreateAllocationNode(
-      assetClasses,
-      `asset-class:${category.assetClass}`,
-      category.assetClass,
-    );
+    const assetClass = assetClassBySourceLabel.get(category.assetClass);
+    if (!assetClass) continue;
     assetClass.marketValueCents += summary.marketValueCents;
 
-    if (category.market && category.market !== category.label) {
+    if (
+      category.assetClass === "权益类" &&
+      category.market &&
+      category.market !== category.label
+    ) {
       const market = findOrCreateAllocationNode(
         assetClass.children,
         `market:${category.market}`,
@@ -137,7 +215,49 @@ export function calculateInvestmentAllocation(
     fixedCategory.marketValueCents += summary.marketValueCents;
   }
 
-  return finalizeAllocationNodes(assetClasses);
+  const cashNode: InvestmentAllocationNode = {
+    id: "asset-class:cash",
+    label: "现金",
+    marketValueCents:
+      cash.emergencyFundCents + cash.goalFundCents + cash.dailyCashCents,
+    children: [
+      {
+        id: "cash:emergencyFund",
+        label: "应急储备",
+        marketValueCents: cash.emergencyFundCents,
+        children: [],
+      },
+      {
+        id: "cash:goalFund",
+        label: "目标储备",
+        marketValueCents: cash.goalFundCents,
+        children: [],
+      },
+      {
+        id: "cash:dailyCash",
+        label: "流动资金",
+        marketValueCents: cash.dailyCashCents,
+        children: [],
+      },
+    ],
+  };
+  const nodes = [...assetClasses, cashNode];
+  const totalCents = nodes.reduce(
+    (total, node) => total + node.marketValueCents,
+    BigInt(0),
+  );
+  const topLevelPercentages = balancedTopLevelPercentages(nodes, totalCents);
+  const items = nodes.flatMap((node) =>
+    finalizeAllocationNode(node, totalCents, null),
+  );
+
+  return {
+    totalCents,
+    items: items.map((item, index) => ({
+      ...item,
+      totalPercentage: topLevelPercentages[index],
+    })),
+  };
 }
 
 export function calculateMonthlyReview(snapshot: MonthlySnapshotInput) {

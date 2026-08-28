@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import type { InvestmentCategoryId } from "@/db/schema";
 import { shiftMonth } from "@/features/monthly-snapshots/form-data";
-import { InvestmentAllocation } from "@/features/monthly-snapshots/investment-allocation";
+import { AssetAllocation } from "@/features/monthly-snapshots/investment-allocation";
 import { MonthlyEntryTrigger } from "@/features/monthly-snapshots/monthly-entry-trigger";
 import { MonthlyRecordActions } from "@/features/monthly-snapshots/monthly-record-actions";
 import {
@@ -11,7 +11,7 @@ import {
 } from "@/features/monthly-snapshots/monthly-trend-charts";
 import type { MonthlySnapshot } from "@/features/monthly-snapshots/repository";
 import {
-  calculateAssetAllocation,
+  calculateAssetSummaryRatios,
   calculateInvestmentAllocation,
   calculateMonthlyConsistency,
   calculateMonthlyReview,
@@ -20,7 +20,7 @@ import {
 
 type CategoryOption = {
   id: InvestmentCategoryId;
-  assetClass: string;
+  assetClass: "权益类" | "固定收益类" | "其他资产";
   market?: string;
   label: string;
 };
@@ -129,12 +129,17 @@ export function MonthlyReview({
   }
 
   const review = calculateMonthlyReview(snapshot);
-  const allocation = calculateAssetAllocation(
+  const summaryRatios = calculateAssetSummaryRatios(
     review.assets.cashCents,
     review.assets.investmentCents,
     review.assets.liabilityCents,
   );
-  const investmentAllocation = calculateInvestmentAllocation(
+  const assetAllocation = calculateInvestmentAllocation(
+    {
+      emergencyFundCents: BigInt(snapshot.cash.emergencyFundCents),
+      goalFundCents: BigInt(snapshot.cash.goalFundCents),
+      dailyCashCents: BigInt(snapshot.cash.dailyCashCents),
+    },
     review.investmentCategories,
     categories,
   );
@@ -253,23 +258,23 @@ export function MonthlyReview({
               <dt>现金</dt>
               <dd>{formatMoney(review.assets.cashCents)}</dd>
               <dd className="asset-ratio">
-                占总资产 {allocation.cashPercent}%
+                占总资产 {summaryRatios.cashPercent}%
               </dd>
             </div>
             <div className="asset-summary-card">
               <dt>投资</dt>
               <dd>{formatMoney(review.assets.investmentCents)}</dd>
               <dd className="asset-ratio">
-                占总资产 {allocation.investmentPercent}%
+                占总资产 {summaryRatios.investmentPercent}%
               </dd>
             </div>
             <div className="asset-summary-card asset-summary-liability">
               <dt>负债</dt>
               <dd>{formatMoney(review.assets.liabilityCents)}</dd>
               <dd className="asset-ratio">
-                {allocation.liabilityPercent === null
+                {summaryRatios.liabilityPercent === null
                   ? "无资产基数"
-                  : `相当于总资产的 ${allocation.liabilityPercent}%`}
+                  : `相当于总资产的 ${summaryRatios.liabilityPercent}%`}
               </dd>
             </div>
             <div
@@ -292,52 +297,22 @@ export function MonthlyReview({
               </dd>
             </div>
           </dl>
-          <figure className="asset-composition">
-            <figcaption>
-              <strong>总资产构成</strong>
-              <span>按现金与投资的当前市值计算</span>
-            </figcaption>
-            <div
-              aria-label={`总资产中现金占 ${allocation.cashPercent}%，投资占 ${allocation.investmentPercent}%`}
-              className="asset-bar"
-              role="img"
-            >
-              <span
-                className="asset-bar-cash"
-                style={{ width: `${allocation.cashPercent}%` }}
-              />
-              <span
-                className="asset-bar-investment"
-                style={{ width: `${allocation.investmentPercent}%` }}
-              />
-            </div>
-            <ul className="asset-legend" aria-label="总资产构成图例">
-              <li>
-                <span className="asset-legend-swatch asset-legend-cash" />
-                现金 <strong>{allocation.cashPercent}%</strong>
-              </li>
-              <li>
-                <span className="asset-legend-swatch asset-legend-investment" />
-                投资 <strong>{allocation.investmentPercent}%</strong>
-              </li>
-            </ul>
-          </figure>
         </div>
       </div>
 
       <div
         className="review-section review-section-last"
-        aria-labelledby="portfolio-review-title"
+        aria-labelledby="asset-allocation-title"
       >
         <div className="review-section-heading">
-          <h3 id="portfolio-review-title">投资组合分类</h3>
-          <p>点击资产类型可查看下一级分类</p>
+          <h3 id="asset-allocation-title">资产配置</h3>
+          <p>所有比例均以现金与基金市值合计为总体，负债不计入分母</p>
         </div>
-        {review.investmentCategories.length === 0 ? (
-          <p className="review-no-investments">这个月份没有基金资产。</p>
-        ) : (
-          <InvestmentAllocation items={investmentAllocation} key={month} />
-        )}
+        <AssetAllocation
+          items={assetAllocation.items}
+          key={month}
+          totalCents={assetAllocation.totalCents}
+        />
       </div>
     </section>
   );

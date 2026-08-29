@@ -2,23 +2,16 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { AppHeader } from "@/app/app-header";
+import { AppShell } from "@/app/app-shell";
 
-describe("AppHeader", () => {
-  it("renders one quiet product identity without appearance controls", () => {
-    const markup = renderToStaticMarkup(createElement(AppHeader));
-
-    expect(markup).toContain("Gold-Finger");
-    expect(markup).toContain("月度财务复盘");
-    expect(markup).not.toContain("外观设置");
-    expect(markup).not.toContain("<button");
-  });
-
-  it("can be hidden from assistive technology in route skeletons", () => {
+describe("AppShell", () => {
+  it("renders shared navigation beside route content", () => {
     const markup = renderToStaticMarkup(
-      createElement(AppHeader, { ariaHidden: true }),
+      createElement(AppShell, null, createElement("section", null, "页面内容")),
     );
 
-    expect(markup).toContain('aria-hidden="true"');
+    expect(markup).toContain('class="app-shell"');
+    expect(markup).toContain('class="app-main"');
+    expect(markup).toContain("页面内容");
   });
 });

@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -14,5 +15,20 @@ describe("RootLayout", () => {
     expect(markup).not.toContain("data-theme");
     expect(markup).not.toContain("gold-finger-theme-v1");
     expect(markup).not.toContain("localStorage");
+  });
+
+  it("defines all dashboard routes inside the shared route group", () => {
+    const routes = [
+      "src/app/(dashboard)/page.tsx",
+      "src/app/(dashboard)/records/page.tsx",
+      "src/app/(dashboard)/portfolio/page.tsx",
+      "src/app/(dashboard)/trends/page.tsx",
+      "src/app/(dashboard)/data/page.tsx",
+    ];
+
+    for (const route of routes) {
+      expect(existsSync(route), `${route} should exist`).toBe(true);
+    }
+    expect(existsSync("src/app/page.tsx")).toBe(false);
   });
 });

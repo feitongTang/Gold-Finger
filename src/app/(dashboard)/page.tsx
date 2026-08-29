@@ -1,4 +1,3 @@
-import { AppHeader } from "@/app/app-header";
 import {
   resolveSelectedMonth,
   shiftMonth,
@@ -39,28 +38,25 @@ export default async function Home({
   );
 
   return (
-    <>
-      <AppHeader />
-      <main className="page-content">
-        <MonthlyReview
-          categories={categories}
-          month={month}
-          previousSnapshot={previousSnapshot}
-          snapshot={snapshot}
-        />
+    <div className="page-content">
+      <MonthlyReview
+        categories={categories}
+        month={month}
+        previousSnapshot={previousSnapshot}
+        snapshot={snapshot}
+      />
 
-        <MonthlyHistory snapshots={historySnapshots} />
+      <MonthlyHistory snapshots={historySnapshots} />
 
-        <MonthlySnapshotForm
-          categories={categories}
-          initialFunds={snapshot?.funds ?? fundTemplate}
-          key={month}
-          month={month}
-          snapshot={snapshot}
-        />
+      <MonthlySnapshotForm
+        categories={categories}
+        initialFunds={snapshot?.funds ?? fundTemplate}
+        key={month}
+        month={month}
+        snapshot={snapshot}
+      />
 
-        <DataSafetyPanel />
-      </main>
-    </>
+      <DataSafetyPanel />
+    </div>
   );
 }

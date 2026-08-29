@@ -1,11 +1,15 @@
 "use client";
 
-import { AppHeader } from "@/app/app-header";
-
 export default function ErrorPage({ reset }: { reset: () => void }) {
   return (
     <div className="error-page">
-      <AppHeader />
+      <header className="app-header">
+        <div className="app-header-inner">
+          <p className="brand">Gold-Finger</p>
+          <span aria-hidden="true" className="header-divider" />
+          <p className="header-context">月度财务复盘</p>
+        </div>
+      </header>
       <main className="error-shell">
         <section className="error-panel">
           <h1>暂时无法读取财务记录</h1>

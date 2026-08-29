@@ -75,4 +75,26 @@ describe("Ice Crystal design system", () => {
     );
     expect(css).not.toMatch(/filter:\s*drop-shadow\([^)]*#[0-9a-f]{6}/i);
   });
+
+  it("keeps focus, fallbacks, and data surfaces readable", () => {
+    expect(css).toMatch(
+      /:focus-visible\s*\{[^}]*outline:\s*2px solid[^}]*outline-offset:\s*2px/,
+    );
+    expect(css).toMatch(/@supports not\s*\(\s*\(backdrop-filter:/);
+    expect(css).not.toMatch(/\.allocation-row\s*\{[^}]*backdrop-filter/);
+    expect(css).not.toMatch(/\.trend-chart-canvas\s*\{[^}]*backdrop-filter/);
+    expect(css).not.toMatch(/box-shadow:\s*0 20px 60px/);
+  });
+
+  it("keeps interactive controls large and removes transforms for reduced motion", () => {
+    expect(css).toMatch(
+      /button,\s*input,\s*select\s*\{[^}]*min-height:\s*40px/,
+    );
+    expect(css).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*?:hover[^}]*\{[^}]*transform:\s*none !important/,
+    );
+    expect(css).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*?:active[^}]*\{[^}]*transform:\s*none !important/,
+    );
+  });
 });

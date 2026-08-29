@@ -121,6 +121,7 @@ body {
 button,
 input,
 select {
+  min-height: 40px;
   font: inherit;
 }
 
@@ -2710,6 +2711,32 @@ select[aria-invalid="true"] {
   min-height: 100dvh;
 }
 
+.dashboard-loading {
+  display: grid;
+  align-content: start;
+  gap: var(--space-8);
+}
+
+.dashboard-loading-heading {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.dashboard-loading-heading .skeleton-line {
+  width: min(100%, 34rem);
+}
+
+.dashboard-loading-content {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+
+.dashboard-loading-card {
+  min-height: 18rem;
+  border-radius: var(--radius-panel);
+}
+
 .skeleton {
   overflow: hidden;
   border-radius: var(--radius-compact);
@@ -2743,6 +2770,13 @@ select[aria-invalid="true"] {
   margin-inline: auto;
   place-items: center;
   padding-block: var(--space-16);
+}
+
+.dashboard-error-shell {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: var(--space-12) 32px;
 }
 
 .error-panel {
@@ -2797,6 +2831,8 @@ select[aria-invalid="true"] {
   }
 
   .skeleton::after,
+  .review-toolbar .month-switcher a:hover,
+  .review-toolbar .month-switcher a:active,
   .primary-button:active:not(:disabled),
   .secondary-button:active:not(:disabled),
   .danger-button:active:not(:disabled),

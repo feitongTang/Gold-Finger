@@ -2506,10 +2506,8 @@ select[aria-invalid="true"] {
 }
 
 .data-safety-panel {
-  margin-top: var(--space-16);
-  padding-top: var(--space-12);
-  border-top: 1px solid var(--border-subtle);
-  background: transparent;
+  margin-top: var(--space-8);
+  padding: var(--space-8);
 }
 
 .data-safety-heading {
@@ -2555,17 +2553,12 @@ select[aria-invalid="true"] {
   padding: var(--space-6);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-control);
-  background: transparent;
+  background: var(--surface-base);
   box-shadow: none;
-}
-
-.safety-card:first-child {
-  background: var(--surface-primary);
 }
 
 .safety-card:last-child {
   color: var(--text-secondary);
-  background: var(--surface-subtle);
 }
 
 .safety-card h3 {

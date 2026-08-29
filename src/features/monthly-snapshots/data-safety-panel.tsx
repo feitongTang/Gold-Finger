@@ -45,7 +45,11 @@ function formatExportTime(timestamp: string) {
   }).format(new Date(timestamp));
 }
 
-export function DataSafetyPanel() {
+export function DataSafetyPanel({
+  restoreSuccessHref = "/",
+}: {
+  restoreSuccessHref?: "/";
+}) {
   const router = useRouter();
   const fileButtonRef = useRef<HTMLButtonElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -127,7 +131,7 @@ export function DataSafetyPanel() {
       setRestoreFile(null);
       setConfirmingRestore(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      router.replace("/");
+      router.replace(restoreSuccessHref);
       router.refresh();
     } catch (error) {
       setOperation({
@@ -143,7 +147,10 @@ export function DataSafetyPanel() {
   const busy = operation.status === "working";
 
   return (
-    <section aria-labelledby="data-safety-title" className="data-safety-panel">
+    <section
+      aria-labelledby="data-safety-title"
+      className="data-safety-panel surface-frosted"
+    >
       <div className="data-safety-heading">
         <div>
           <p className="data-safety-eyebrow">本地数据安全</p>
@@ -156,7 +163,10 @@ export function DataSafetyPanel() {
       </div>
 
       <div className="data-safety-grid">
-        <section aria-labelledby="export-backup-title" className="safety-card">
+        <section
+          aria-labelledby="export-backup-title"
+          className="safety-card surface-base"
+        >
           <h3 id="export-backup-title">导出备份</h3>
           <p>下载包含全部月份的版本化 JSON 文件，可用于完整恢复。</p>
           <p className="backup-status">
@@ -174,7 +184,10 @@ export function DataSafetyPanel() {
           </button>
         </section>
 
-        <section aria-labelledby="restore-backup-title" className="safety-card">
+        <section
+          aria-labelledby="restore-backup-title"
+          className="safety-card surface-base"
+        >
           <h3 id="restore-backup-title">从备份恢复</h3>
           <p>仅接受 Gold-Finger 导出的 JSON；校验通过后才会替换当前数据。</p>
           <label className="backup-file-label" htmlFor="backup-file">

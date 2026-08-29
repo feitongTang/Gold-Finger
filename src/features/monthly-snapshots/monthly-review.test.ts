@@ -78,6 +78,8 @@ describe("MonthlyReview", () => {
       markup.indexOf("当前净资产"),
     );
     expect(markup).toContain('class="review-summary');
+    expect(markup).toContain('href="/records?month=2026-07"');
+    expect(markup).not.toContain("删除本月");
   });
 
   it("renders a quiet empty summary without a decorative icon", () => {
@@ -91,6 +93,7 @@ describe("MonthlyReview", () => {
 
     expect(markup).toContain("暂无复盘结果");
     expect(markup).toContain("新建数据");
+    expect(markup).toContain('href="/records?month=2026-08"');
     expect(markup).not.toContain("review-empty-icon");
     expect(markup).not.toContain("<svg");
   });

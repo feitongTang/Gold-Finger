@@ -11,6 +11,12 @@ import type { MonthlySnapshotFormState } from "@/features/monthly-snapshots/form
 import { createMonthlySnapshotRepository } from "@/features/monthly-snapshots/repository";
 import { saveMonthlySnapshot } from "@/features/monthly-snapshots/save";
 
+const MONTHLY_READ_PATHS = ["/", "/records", "/portfolio", "/trends"] as const;
+
+function revalidateMonthlyPages() {
+  for (const path of MONTHLY_READ_PATHS) revalidatePath(path);
+}
+
 export async function saveMonthlySnapshotAction(
   _previousState: MonthlySnapshotFormState,
   formData: FormData,
@@ -20,7 +26,7 @@ export async function saveMonthlySnapshotAction(
     formData,
   );
 
-  if (state.status === "success") revalidatePath("/");
+  if (state.status === "success") revalidateMonthlyPages();
 
   return state;
 }
@@ -37,7 +43,7 @@ export async function deleteMonthlySnapshotAction(
     month,
   );
 
-  if (state.status === "success") revalidatePath("/");
+  if (state.status === "success") revalidateMonthlyPages();
 
   return state;
 }

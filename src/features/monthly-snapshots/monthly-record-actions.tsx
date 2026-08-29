@@ -1,17 +1,31 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useState } from "react";
 
 import { deleteMonthlySnapshotAction } from "@/features/monthly-snapshots/actions";
 import { initialDeleteMonthlySnapshotState } from "@/features/monthly-snapshots/delete";
 
-export function MonthlyRecordActions({ month }: { month: string }) {
+export function MonthlyRecordActions({
+  month,
+  successHref,
+}: {
+  month: string;
+  successHref: string;
+}) {
+  const router = useRouter();
   const deleteAction = deleteMonthlySnapshotAction.bind(null, month);
   const [state, formAction, pending] = useActionState(
     deleteAction,
     initialDeleteMonthlySnapshotState,
   );
   const [confirming, setConfirming] = useState(false);
+
+  useEffect(() => {
+    if (state.status !== "success") return;
+    router.replace(successHref);
+    router.refresh();
+  }, [router, state.status, successHref]);
 
   if (!confirming) {
     return (

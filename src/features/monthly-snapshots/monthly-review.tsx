@@ -1,10 +1,9 @@
 import Link from "next/link";
 
 import type { InvestmentCategoryId } from "@/db/schema";
-import { shiftMonth } from "@/features/monthly-snapshots/form-data";
 import { AssetAllocation } from "@/features/monthly-snapshots/investment-allocation";
-import { MonthlyEntryTrigger } from "@/features/monthly-snapshots/monthly-entry-trigger";
-import { MonthlyRecordActions } from "@/features/monthly-snapshots/monthly-record-actions";
+import { monthHref } from "@/features/monthly-snapshots/month-routing";
+import { MonthSwitcher } from "@/features/monthly-snapshots/month-switcher";
 import {
   MonthlyTrendCharts,
   type SerializableMonthlyTrendPoint,
@@ -62,31 +61,6 @@ function amountDirection(cents: bigint, lowerIsBetter = false) {
   return "neutral";
 }
 
-function MonthSwitcher({ month }: { month: string }) {
-  const previousMonth = shiftMonth(month, -1);
-  const nextMonth = shiftMonth(month, 1);
-
-  return (
-    <nav aria-label="切换记录月份" className="month-switcher">
-      <Link
-        aria-label={`查看 ${previousMonth}`}
-        className="month-switcher-arrow"
-        href={`/?month=${previousMonth}`}
-      >
-        ‹
-      </Link>
-      <time dateTime={month}>{month}</time>
-      <Link
-        aria-label={`查看 ${nextMonth}`}
-        className="month-switcher-arrow"
-        href={`/?month=${nextMonth}`}
-      >
-        ›
-      </Link>
-    </nav>
-  );
-}
-
 export function MonthlyReview({
   month,
   snapshot,
@@ -111,7 +85,7 @@ export function MonthlyReview({
               月度复盘
             </h1>
           </div>
-          <MonthSwitcher month={month} />
+          <MonthSwitcher month={month} pathname="/" />
         </header>
         <div className="review-summary review-summary-empty">
           <div>
@@ -122,7 +96,12 @@ export function MonthlyReview({
             <h3>暂无复盘结果</h3>
             <p>新建这个月份的财务记录后，资金分配与资产结构会显示在这里。</p>
           </div>
-          <MonthlyEntryTrigger label="新建数据" />
+          <Link
+            className="primary-button review-entry-button"
+            href={monthHref("/records", month)}
+          >
+            新建数据
+          </Link>
         </div>
       </section>
     );
@@ -153,7 +132,7 @@ export function MonthlyReview({
             月度复盘
           </h1>
         </div>
-        <MonthSwitcher month={month} />
+        <MonthSwitcher month={month} pathname="/" />
       </header>
 
       <div
@@ -164,8 +143,12 @@ export function MonthlyReview({
           <strong>{formatMoney(review.assets.netWorthCents)}</strong>
         </div>
         <div className="review-record-actions">
-          <MonthlyEntryTrigger label="更新数据" />
-          <MonthlyRecordActions month={month} />
+          <Link
+            className="primary-button review-entry-button"
+            href={monthHref("/records", month)}
+          >
+            更新数据
+          </Link>
         </div>
       </div>
 

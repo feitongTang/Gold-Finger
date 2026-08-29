@@ -8,7 +8,6 @@ import {
   MonthlyHistory,
   MonthlyReview,
 } from "@/features/monthly-snapshots/monthly-review";
-import { MonthlySnapshotForm } from "@/features/monthly-snapshots/monthly-snapshot-form";
 
 export const dynamic = "force-dynamic";
 
@@ -26,8 +25,7 @@ export default async function Home({
   const requestedMonth =
     typeof query.month === "string" ? query.month : undefined;
   const month = resolveSelectedMonth(requestedMonth, currentMonth());
-  const { snapshot, fundTemplate, snapshots, categories } =
-    loadMonthlyEntry(month);
+  const { snapshot, snapshots, categories } = loadMonthlyEntry(month);
   const historyStartMonth = shiftMonth(month, -5);
   const historySnapshots = snapshots.filter(
     (snapshot) =>
@@ -47,14 +45,6 @@ export default async function Home({
       />
 
       <MonthlyHistory snapshots={historySnapshots} />
-
-      <MonthlySnapshotForm
-        categories={categories}
-        initialFunds={snapshot?.funds ?? fundTemplate}
-        key={month}
-        month={month}
-        snapshot={snapshot}
-      />
 
       <DataSafetyPanel />
     </div>

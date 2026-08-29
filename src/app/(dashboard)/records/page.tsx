@@ -1,8 +1,27 @@
-export default function RecordsPage() {
+import { loadMonthlyEntry } from "@/features/monthly-snapshots/data";
+import {
+  currentMonth,
+  resolveMonthQuery,
+  type MonthQuery,
+} from "@/features/monthly-snapshots/month-routing";
+import { RecordsPageView } from "@/features/monthly-snapshots/records-page";
+
+export const dynamic = "force-dynamic";
+
+export default async function RecordsRoute({
+  searchParams,
+}: {
+  searchParams: Promise<MonthQuery>;
+}) {
+  const month = resolveMonthQuery(await searchParams, currentMonth());
+  const { snapshot, fundTemplate, categories } = loadMonthlyEntry(month);
+
   return (
-    <section className="page-content">
-      <h1>月度记录</h1>
-      <p>在这里新建或更新所选月份的财务记录。</p>
-    </section>
+    <RecordsPageView
+      categories={categories}
+      initialFunds={snapshot?.funds ?? fundTemplate}
+      month={month}
+      snapshot={snapshot}
+    />
   );
 }

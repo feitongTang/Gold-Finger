@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   useActionState,
   useCallback,
@@ -10,7 +11,6 @@ import {
 } from "react";
 
 import { saveMonthlySnapshotAction } from "@/features/monthly-snapshots/actions";
-import { OPEN_MONTHLY_ENTRY_EVENT } from "@/features/monthly-snapshots/monthly-entry-trigger";
 import {
   canAddFund,
   formatCentsAsYuan,
@@ -20,7 +20,7 @@ import {
   MAX_FUNDS,
 } from "@/features/monthly-snapshots/form-model";
 
-type CategoryOption = {
+export type MonthlySnapshotCategoryOption = {
   id: string;
   assetClass: string;
   market?: string;
@@ -56,8 +56,11 @@ type FundRow = {
   monthlyInvestment: string;
 };
 
-type InitialFund = Omit<SnapshotValues["funds"][number], "marketValueCents"> & {
+export type MonthlySnapshotFormFund = {
+  name: string;
+  category: string;
   marketValueCents: number | null;
+  monthlyInvestmentCents: number;
 };
 
 type MoneyFieldProps = {
@@ -131,7 +134,9 @@ function MoneyField({
   );
 }
 
-function createFundRows(funds: ReadonlyArray<InitialFund>): FundRow[] {
+function createFundRows(
+  funds: ReadonlyArray<MonthlySnapshotFormFund>,
+): FundRow[] {
   return funds.map((fund, index) => ({
     id: `saved-${index}`,
     name: fund.name,
@@ -149,17 +154,19 @@ export function MonthlySnapshotForm({
   snapshot,
   initialFunds,
   categories,
+  successHref,
 }: {
   month: string;
   snapshot: SnapshotValues | null;
-  initialFunds: ReadonlyArray<InitialFund>;
-  categories: ReadonlyArray<CategoryOption>;
+  initialFunds: ReadonlyArray<MonthlySnapshotFormFund>;
+  categories: ReadonlyArray<MonthlySnapshotCategoryOption>;
+  successHref: string;
 }) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(
     saveMonthlySnapshotAction,
     initialMonthlySnapshotFormState,
   );
-  const [isOpen, setIsOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
   const fundSource = JSON.stringify(initialFunds);
@@ -203,46 +210,30 @@ export function MonthlySnapshotForm({
     if (control) focusAndReveal(control);
   }
 
-  const openForm = useCallback(() => {
-    setIsOpen(true);
-    requestAnimationFrame(() => {
-      const firstError = errorSummary[0];
-      const firstErrorField = firstError ? findField(firstError.field) : null;
-      const firstField = formRef.current?.querySelector<HTMLElement>(
-        'input:not([type="hidden"]), select',
-      );
-      const target =
-        state.status === "error"
-          ? (firstErrorField ?? statusRef.current)
-          : firstField;
-      if (target) focusAndReveal(target);
-    });
-  }, [errorSummary, findField, state.status]);
-
-  useEffect(() => {
-    window.addEventListener(OPEN_MONTHLY_ENTRY_EVENT, openForm);
-    return () => window.removeEventListener(OPEN_MONTHLY_ENTRY_EVENT, openForm);
-  }, [openForm]);
-
   useEffect(() => {
     if (state.status === "idle") return;
 
     const frame = requestAnimationFrame(() => {
       if (state.status === "success") {
-        setIsOpen(false);
-        const resultHeading = document.getElementById("review-title");
-        if (resultHeading) focusAndReveal(resultHeading);
+        router.replace(successHref);
+        router.refresh();
         return;
       }
 
-      setIsOpen(true);
       const firstError = errorSummary[0];
       const firstErrorField = firstError ? findField(firstError.field) : null;
       const target = firstErrorField ?? statusRef.current;
       if (target) focusAndReveal(target);
     });
     return () => cancelAnimationFrame(frame);
-  }, [state.status, state.message, errorSummary, findField]);
+  }, [
+    state.status,
+    state.message,
+    errorSummary,
+    findField,
+    router,
+    successHref,
+  ]);
 
   function addFund() {
     if (!canAddFund(fundRows.length)) return;
@@ -273,25 +264,6 @@ export function MonthlySnapshotForm({
 
   return (
     <>
-      <section
-        className="entry-toggle-panel"
-        aria-labelledby="entry-title"
-        id="monthly-entry"
-      >
-        <div>
-          <h2 id="entry-title">月度记录</h2>
-          <p>{snapshot ? "本月已有数据，可按需修改。" : "本月还没有数据。"}</p>
-        </div>
-        <button
-          aria-controls="monthly-entry-form"
-          aria-expanded={isOpen}
-          className={`primary-button entry-toggle-button${isOpen ? " entry-toggle-button-open" : ""}`}
-          onClick={() => (isOpen ? setIsOpen(false) : openForm())}
-          type="button"
-        >
-          {isOpen ? "收起记录" : snapshot ? "更新数据" : "新建数据"}
-        </button>
-      </section>
       {state.status !== "idle" ? (
         <div
           aria-live="polite"
@@ -329,7 +301,6 @@ export function MonthlySnapshotForm({
       <form
         action={formAction}
         className="snapshot-form"
-        hidden={!isOpen}
         id="monthly-entry-form"
         noValidate
         ref={formRef}

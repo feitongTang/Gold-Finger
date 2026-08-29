@@ -138,9 +138,11 @@ function AllocationTree({
 }
 
 export function AssetAllocation({
+  density = "full",
   items,
   totalCents,
 }: {
+  density?: "summary" | "full";
   items: InvestmentAllocationItem[];
   totalCents: bigint;
 }) {
@@ -198,13 +200,35 @@ export function AssetAllocation({
         </ul>
       </figure>
       <div className="asset-allocation-tree">
-        <AllocationTree
-          depth={0}
-          expandedIds={expandedIds}
-          items={items}
-          onToggle={toggle}
-          parentLabel={null}
-        />
+        {density === "summary" ? (
+          <ul className="allocation-list allocation-list-summary">
+            {items.map((item) => {
+              const tone = assetTone(item);
+
+              return (
+                <li
+                  className={tone ? `allocation-tone-${tone}` : undefined}
+                  key={item.id}
+                >
+                  <AllocationRow
+                    depth={0}
+                    isExpanded={false}
+                    item={item}
+                    parentLabel={null}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <AllocationTree
+            depth={0}
+            expandedIds={expandedIds}
+            items={items}
+            onToggle={toggle}
+            parentLabel={null}
+          />
+        )}
       </div>
     </div>
   );

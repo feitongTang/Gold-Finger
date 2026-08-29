@@ -134,4 +134,23 @@ describe("AssetAllocation", () => {
         .getAttribute("aria-expanded"),
     ).toBe("true");
   });
+
+  it("keeps the allocation overview and top level rows in summary density", () => {
+    const { container } = render(
+      createElement(AssetAllocation, {
+        density: "summary",
+        items: allocationItems,
+        totalCents: BigInt(10_000),
+      }),
+    );
+
+    expect(
+      container.querySelector(".asset-allocation-overview-bar"),
+    ).toBeTruthy();
+    expect(screen.getByLabelText("资产配置图例")).toBeTruthy();
+    expect(screen.getAllByText("股票").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("现金").length).toBeGreaterThan(0);
+    expect(screen.queryByText("纳斯达克100")).toBeNull();
+    expect(container.querySelector(".allocation-row-button")).toBeNull();
+  });
 });

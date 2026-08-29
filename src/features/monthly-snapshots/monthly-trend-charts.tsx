@@ -281,6 +281,93 @@ function ChartLegend({ series }: { series: ReadonlyArray<ChartSeries> }) {
   );
 }
 
+export function MonthlyTrendPreview({
+  points,
+}: {
+  points: ReadonlyArray<SerializableMonthlyTrendPoint>;
+}) {
+  const [mode, setMode] = useState<"assets" | "cash-flow">("assets");
+  const parsedPoints = points.map((point) => ({
+    ...point,
+    netWorthCents: BigInt(point.netWorthCents),
+    cashCents: BigInt(point.cashCents),
+    investmentCents: BigInt(point.investmentCents),
+    liabilityCents: BigInt(point.liabilityCents),
+    incomeCents: BigInt(point.incomeCents),
+    expenseCents: BigInt(point.expenseCents),
+  }));
+  const months = parsedPoints.map((point) => point.month);
+  const series: ChartSeries[] =
+    mode === "assets"
+      ? [
+          {
+            id: "net-worth",
+            label: "净资产",
+            values: parsedPoints.map((point) => point.netWorthCents),
+            className: "trend-series-net-worth",
+          },
+          {
+            id: "cash",
+            label: "现金",
+            values: parsedPoints.map((point) => point.cashCents),
+            className: "trend-series-cash",
+          },
+          {
+            id: "investment",
+            label: "投资",
+            values: parsedPoints.map((point) => point.investmentCents),
+            className: "trend-series-investment",
+          },
+        ]
+      : [
+          {
+            id: "income",
+            label: "收入",
+            values: parsedPoints.map((point) => point.incomeCents),
+            className: "trend-series-income",
+          },
+          {
+            id: "expense",
+            label: "支出",
+            values: parsedPoints.map((point) => point.expenseCents),
+            className: "trend-series-expense",
+          },
+        ];
+
+  return (
+    <figure className="trend-chart-card trend-chart-preview">
+      <figcaption className="trend-chart-caption">
+        <ChartLegend series={series} />
+        <div
+          aria-label="选择趋势摘要"
+          className="trend-chart-toggle trend-chart-mode-toggle"
+          role="group"
+        >
+          <button
+            aria-pressed={mode === "assets"}
+            onClick={() => setMode("assets")}
+            type="button"
+          >
+            资产变化
+          </button>
+          <button
+            aria-pressed={mode === "cash-flow"}
+            onClick={() => setMode("cash-flow")}
+            type="button"
+          >
+            收支变化
+          </button>
+        </div>
+      </figcaption>
+      <LineChart
+        ariaLabel={`${mode === "assets" ? "资产变化趋势" : "收入与支出趋势"}，共 ${points.length} 个已保存月份。可悬浮或聚焦数据点查看精确金额。`}
+        months={months}
+        series={series}
+      />
+    </figure>
+  );
+}
+
 export function MonthlyTrendCharts({
   points,
 }: {

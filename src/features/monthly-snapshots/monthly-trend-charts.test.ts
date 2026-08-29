@@ -72,4 +72,28 @@ describe("MonthlyTrendCharts", () => {
     expect(screen.getByRole("img", { name: /收入与支出趋势/ })).toBeTruthy();
     expect(screen.queryByRole("img", { name: /资产变化趋势/ })).toBeNull();
   });
+
+  it("shows exactly one full-page chart and switches between asset and cash-flow trends", () => {
+    const { container } = render(createElement(MonthlyTrendCharts, { points }));
+
+    expect(container.querySelectorAll("figure")).toHaveLength(1);
+    expect(
+      screen
+        .getByRole("button", { name: "资产变化" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(screen.getByRole("img", { name: /资产变化趋势/ })).toBeTruthy();
+    expect(screen.queryByRole("img", { name: /收入与支出趋势/ })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "收支变化" }));
+
+    expect(container.querySelectorAll("figure")).toHaveLength(1);
+    expect(
+      screen
+        .getByRole("button", { name: "收支变化" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(screen.getByRole("img", { name: /收入与支出趋势/ })).toBeTruthy();
+    expect(screen.queryByRole("img", { name: /资产变化趋势/ })).toBeNull();
+  });
 });

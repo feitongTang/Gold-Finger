@@ -3,7 +3,6 @@
 import { Fragment, useState } from "react";
 
 import {
-  calculateRecentAverageCents,
   createTrendChartLayout,
   TREND_CHART,
 } from "@/features/monthly-snapshots/trend-chart-model";
@@ -373,12 +372,7 @@ export function MonthlyTrendCharts({
 }: {
   points: ReadonlyArray<SerializableMonthlyTrendPoint>;
 }) {
-  const [assetMetric, setAssetMetric] = useState<"assets" | "liability">(
-    "assets",
-  );
-  const [cashFlowMetric, setCashFlowMetric] = useState<"income" | "expense">(
-    "income",
-  );
+  const [mode, setMode] = useState<"assets" | "cash-flow">("assets");
   const parsedPoints = points.map((point) => ({
     ...point,
     netWorthCents: BigInt(point.netWorthCents),
@@ -389,8 +383,8 @@ export function MonthlyTrendCharts({
     expenseCents: BigInt(point.expenseCents),
   }));
   const months = parsedPoints.map((point) => point.month);
-  const assetSeries: ChartSeries[] =
-    assetMetric === "assets"
+  const series: ChartSeries[] =
+    mode === "assets"
       ? [
           {
             id: "net-worth",
@@ -410,128 +404,68 @@ export function MonthlyTrendCharts({
             values: parsedPoints.map((point) => point.investmentCents),
             className: "trend-series-investment",
           },
-        ]
-      : [
           {
             id: "liability",
             label: "负债",
             values: parsedPoints.map((point) => point.liabilityCents),
             className: "trend-series-liability",
           },
+        ]
+      : [
+          {
+            id: "income",
+            label: "收入",
+            values: parsedPoints.map((point) => point.incomeCents),
+            className: "trend-series-income",
+          },
+          {
+            id: "expense",
+            label: "支出",
+            values: parsedPoints.map((point) => point.expenseCents),
+            className: "trend-series-expense",
+          },
         ];
-  const cashFlowSeries: ChartSeries[] = [
-    cashFlowMetric === "income"
-      ? {
-          id: "income",
-          label: "收入",
-          values: parsedPoints.map((point) => point.incomeCents),
-          className: "trend-series-income",
-        }
-      : {
-          id: "expense",
-          label: "支出",
-          values: parsedPoints.map((point) => point.expenseCents),
-          className: "trend-series-expense",
-        },
-  ];
-  const recentAverage = calculateRecentAverageCents(
-    cashFlowSeries[0].values,
-    6,
-  );
-  const averageMonthCount = Math.min(points.length, 6);
 
   return (
-    <div className="trend-chart-grid">
-      <figure className="trend-chart-card">
-        <figcaption className="trend-chart-caption">
-          <div>
-            <h3>资产变化趋势</h3>
-            <p>
-              {assetMetric === "assets"
-                ? "净资产、现金与投资的月末变化"
-                : "单独查看月末负债变化，避免资产量级干扰"}
-            </p>
-          </div>
-          <div className="trend-chart-caption-controls">
-            {assetMetric === "assets" ? (
-              <ChartLegend series={assetSeries} />
-            ) : null}
-            <div
-              aria-label="选择资产趋势"
-              className="trend-chart-toggle"
-              role="group"
-            >
-              <button
-                aria-pressed={assetMetric === "assets"}
-                onClick={() => setAssetMetric("assets")}
-                type="button"
-              >
-                资产
-              </button>
-              <button
-                aria-pressed={assetMetric === "liability"}
-                onClick={() => setAssetMetric("liability")}
-                type="button"
-              >
-                负债
-              </button>
-            </div>
-          </div>
-        </figcaption>
-        <LineChart
-          ariaLabel={`${assetMetric === "assets" ? "资产" : "负债"}变化趋势，共 ${points.length} 个已保存月份。可悬浮或聚焦数据点查看精确金额。`}
-          months={months}
-          series={assetSeries}
-        />
-      </figure>
-
-      <figure className="trend-chart-card">
-        <figcaption className="trend-chart-caption">
-          <div>
-            <h3>收入与支出趋势</h3>
-            <p>
-              近 {averageMonthCount} 个记录月
-              {cashFlowMetric === "income" ? "收入" : "支出"}平均：
-              <strong>
-                {recentAverage === null ? "—" : formatMoney(recentAverage)}
-              </strong>
-            </p>
-          </div>
+    <figure className="trend-chart-card trend-chart-full">
+      <figcaption className="trend-chart-caption">
+        <div>
+          <h3>{mode === "assets" ? "资产变化趋势" : "收入与支出趋势"}</h3>
+          <p>
+            {mode === "assets"
+              ? "净资产、现金、投资与负债的月末变化"
+              : "收入与支出的月度变化"}
+          </p>
+        </div>
+        <div className="trend-chart-caption-controls">
+          <ChartLegend series={series} />
           <div
-            aria-label="选择现金流趋势"
-            className="trend-chart-toggle"
+            aria-label="选择历史趋势"
+            className="trend-chart-toggle trend-chart-mode-toggle"
             role="group"
           >
             <button
-              aria-pressed={cashFlowMetric === "income"}
-              onClick={() => setCashFlowMetric("income")}
+              aria-pressed={mode === "assets"}
+              onClick={() => setMode("assets")}
               type="button"
             >
-              收入
+              资产变化
             </button>
             <button
-              aria-pressed={cashFlowMetric === "expense"}
-              onClick={() => setCashFlowMetric("expense")}
+              aria-pressed={mode === "cash-flow"}
+              onClick={() => setMode("cash-flow")}
               type="button"
             >
-              支出
+              收支变化
             </button>
           </div>
-        </figcaption>
-        <LineChart
-          ariaLabel={`${cashFlowMetric === "income" ? "收入" : "支出"}趋势，共 ${points.length} 个已保存月份。可悬浮或聚焦数据点查看精确金额。`}
-          months={months}
-          referenceLine={
-            recentAverage === null
-              ? undefined
-              : {
-                  label: `近 ${averageMonthCount} 个记录月平均`,
-                  value: recentAverage,
-                }
-          }
-          series={cashFlowSeries}
-        />
-      </figure>
-    </div>
+        </div>
+      </figcaption>
+      <LineChart
+        ariaLabel={`${mode === "assets" ? "资产变化趋势" : "收入与支出趋势"}，共 ${points.length} 个已保存月份。可悬浮或聚焦数据点查看精确金额。`}
+        months={months}
+        series={series}
+      />
+    </figure>
   );
 }

@@ -971,7 +971,7 @@ button:disabled {
 
 .allocation-row-button:hover,
 .allocation-row-button:focus-visible {
-  background: color-mix(in srgb, var(--allocation-color) 8%, transparent);
+  background: rgb(255 255 255 / 34%);
 }
 
 .allocation-row-button:focus-visible {
@@ -1053,6 +1053,200 @@ button:disabled {
   background: var(--surface-subtle);
   text-align: center;
   font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.portfolio-overview,
+.portfolio-allocation-panel,
+.portfolio-holdings-panel,
+.portfolio-empty-state {
+  border-radius: var(--radius-panel);
+}
+
+.portfolio-overview {
+  padding: var(--space-8);
+}
+
+.portfolio-overview-heading,
+.portfolio-section-heading {
+  margin-bottom: var(--space-6);
+}
+
+.portfolio-overview-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+.portfolio-overview-heading h2,
+.portfolio-section-heading h2,
+.portfolio-empty-state h2 {
+  margin: var(--space-1) 0 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+.portfolio-overview-heading a {
+  min-height: 40px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 40px;
+  text-underline-offset: 3px;
+}
+
+.portfolio-primary-metrics,
+.portfolio-context-metrics {
+  display: grid;
+  margin: 0;
+}
+
+.portfolio-primary-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.portfolio-primary-metrics > div + div,
+.portfolio-context-metrics > div + div {
+  border-left: 1px solid var(--border-soft);
+}
+
+.portfolio-primary-metrics > div,
+.portfolio-context-metrics > div {
+  min-width: 0;
+  padding-inline: var(--space-6);
+}
+
+.portfolio-primary-metrics > div:first-child,
+.portfolio-context-metrics > div:first-child {
+  padding-left: 0;
+}
+
+.portfolio-primary-metrics > div:last-child,
+.portfolio-context-metrics > div:last-child {
+  padding-right: 0;
+}
+
+.portfolio-context-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding-top: var(--space-6);
+}
+
+.portfolio-primary-metrics dt,
+.portfolio-context-metrics dt {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.portfolio-primary-metrics dd,
+.portfolio-context-metrics dd {
+  overflow-wrap: anywhere;
+  margin: var(--space-2) 0 0;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.portfolio-primary-metrics dd {
+  font-size: 22px;
+}
+
+.portfolio-context-metrics dd {
+  font-size: 15px;
+}
+
+.portfolio-context-metrics .portfolio-liability-metric dd,
+.portfolio-context-metrics .portfolio-negative-metric dd {
+  color: var(--negative);
+}
+
+.portfolio-context-metrics .portfolio-positive-metric dd {
+  color: var(--positive);
+}
+
+.portfolio-allocation-panel,
+.portfolio-holdings-panel {
+  padding: var(--space-6);
+  margin-top: var(--space-8);
+}
+
+.portfolio-allocation-panel .asset-allocation {
+  border-color: var(--border-soft);
+}
+
+.portfolio-allocation-panel .asset-allocation-overview,
+.portfolio-allocation-panel .asset-allocation-tree,
+.portfolio-allocation-panel .allocation-list .allocation-list {
+  background: transparent;
+}
+
+.portfolio-holdings-panel {
+  overflow: hidden;
+}
+
+.portfolio-holdings-table-wrap {
+  overflow-x: auto;
+}
+
+.portfolio-holdings-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--text-primary);
+  font-size: 13px;
+  text-align: left;
+}
+
+.portfolio-holdings-table th,
+.portfolio-holdings-table td {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.portfolio-holdings-table thead th {
+  border-top: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.portfolio-holdings-table tbody th {
+  font-weight: 600;
+}
+
+.portfolio-holdings-table td:nth-child(3),
+.portfolio-holdings-table td:nth-child(4),
+.portfolio-holdings-table th:nth-child(3),
+.portfolio-holdings-table th:nth-child(4) {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  text-align: right;
+  white-space: nowrap;
+}
+
+.portfolio-holdings-empty {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.portfolio-empty-state {
+  display: grid;
+  justify-items: start;
+  padding: var(--space-8);
+}
+
+.portfolio-empty-state p {
+  max-width: 34rem;
+  margin: var(--space-3) 0 var(--space-6);
+  color: var(--text-secondary);
+  font-size: 14px;
   line-height: 1.6;
 }
 

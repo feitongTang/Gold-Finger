@@ -1,8 +1,26 @@
-export default function PortfolioPage() {
+import { loadMonthlyEntry } from "@/features/monthly-snapshots/data";
+import {
+  currentMonth,
+  resolveMonthQuery,
+  type MonthQuery,
+} from "@/features/monthly-snapshots/month-routing";
+import { PortfolioPageView } from "@/features/monthly-snapshots/portfolio-page";
+
+export const dynamic = "force-dynamic";
+
+export default async function PortfolioRoute({
+  searchParams,
+}: {
+  searchParams: Promise<MonthQuery>;
+}) {
+  const month = resolveMonthQuery(await searchParams, currentMonth());
+  const { snapshot, categories } = loadMonthlyEntry(month);
+
   return (
-    <section className="page-content">
-      <h1>投资组合</h1>
-      <p>查看所选月份的资产配置与基金结构。</p>
-    </section>
+    <PortfolioPageView
+      categories={categories}
+      month={month}
+      snapshot={snapshot}
+    />
   );
 }

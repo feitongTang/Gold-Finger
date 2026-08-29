@@ -1371,7 +1371,6 @@ button:disabled {
 
 .review-asset-summary dd,
 .monthly-flow-metric dd {
-  overflow-wrap: anywhere;
   margin: var(--space-2) 0 0;
   color: var(--text-primary);
   font-size: 16px;
@@ -1379,6 +1378,7 @@ button:disabled {
   font-feature-settings: "tnum";
   font-weight: 650;
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .review-asset-summary .review-asset-liability dd {
@@ -2848,6 +2848,41 @@ select[aria-invalid="true"] {
 }
 
 @media (max-width: 56rem) {
+  .review-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .review-toolbar-actions {
+    justify-content: space-between;
+  }
+
+  .review-status-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+
+  .review-asset-summary > div {
+    padding-inline: var(--space-4);
+  }
+
+  .monthly-flow-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .monthly-flow-metric:nth-child(odd) {
+    border-left: 0;
+  }
+
+  .monthly-flow-metric:nth-child(n + 3) {
+    border-top: 1px solid var(--border-soft);
+  }
+
+  .review-analysis-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .data-safety-grid {
     grid-template-columns: minmax(0, 1fr);
   }

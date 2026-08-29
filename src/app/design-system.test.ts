@@ -76,6 +76,27 @@ describe("Ice Crystal design system", () => {
     expect(css).not.toMatch(/filter:\s*drop-shadow\([^)]*#[0-9a-f]{6}/i);
   });
 
+  it("keeps dashboard financial amounts on one readable line", () => {
+    expect(css).toMatch(
+      /\.review-asset-summary dd,\s*\.monthly-flow-metric dd\s*\{[^}]*white-space:\s*nowrap/,
+    );
+  });
+
+  it("reflows dashboard panels for high browser zoom", () => {
+    expect(css).toMatch(
+      /@media \(max-width:\s*56rem\)[\s\S]*?\.review-status-card\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/,
+    );
+    expect(css).toMatch(
+      /@media \(max-width:\s*56rem\)[\s\S]*?\.review-asset-summary\s*>\s*div\s*\{[^}]*padding-inline:\s*var\(--space-4\)/,
+    );
+    expect(css).toMatch(
+      /@media \(max-width:\s*56rem\)[\s\S]*?\.monthly-flow-strip\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/,
+    );
+    expect(css).toMatch(
+      /@media \(max-width:\s*56rem\)[\s\S]*?\.review-analysis-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/,
+    );
+  });
+
   it("keeps focus, fallbacks, and data surfaces readable", () => {
     expect(css).toMatch(
       /:focus-visible\s*\{[^}]*outline:\s*2px solid[^}]*outline-offset:\s*2px/,

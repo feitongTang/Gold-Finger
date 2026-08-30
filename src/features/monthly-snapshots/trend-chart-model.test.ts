@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   calculateRecentAverageCents,
+  createMonotoneCurvePath,
+  createMonotoneCurveSegments,
   createTrendChartLayout,
 } from "@/features/monthly-snapshots/trend-chart-model";
 
@@ -64,5 +66,45 @@ describe("createTrendChartLayout", () => {
       { x: 56, y: 212 },
       { x: 704, y: 24 },
     ]);
+  });
+});
+
+describe("monotone chart curves", () => {
+  it("keeps empty, single-point, and two-point charts exact", () => {
+    expect(createMonotoneCurvePath([])).toBe("");
+    expect(createMonotoneCurvePath([{ x: 380, y: 118 }])).toBe("M 380 118");
+    expect(
+      createMonotoneCurvePath([
+        { x: 56, y: 212 },
+        { x: 704, y: 24 },
+      ]),
+    ).toBe("M 56 212 L 704 24");
+  });
+
+  it("keeps every cubic control point inside its segment range", () => {
+    const segments = createMonotoneCurveSegments([
+      { x: 56, y: 180 },
+      { x: 272, y: 60 },
+      { x: 488, y: 130 },
+      { x: 704, y: 40 },
+    ]);
+
+    expect(segments).toHaveLength(3);
+    for (const segment of segments) {
+      const low = Math.min(segment.start.y, segment.end.y);
+      const high = Math.max(segment.start.y, segment.end.y);
+      expect(segment.control1.y).toBeGreaterThanOrEqual(low);
+      expect(segment.control1.y).toBeLessThanOrEqual(high);
+      expect(segment.control2.y).toBeGreaterThanOrEqual(low);
+      expect(segment.control2.y).toBeLessThanOrEqual(high);
+    }
+    expect(
+      createMonotoneCurvePath([
+        { x: 56, y: 180 },
+        { x: 272, y: 60 },
+        { x: 488, y: 130 },
+        { x: 704, y: 40 },
+      ]),
+    ).toContain(" C ");
   });
 });

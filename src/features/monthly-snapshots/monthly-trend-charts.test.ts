@@ -47,6 +47,25 @@ describe("MonthlyTrendCharts", () => {
     expect(markup.match(/r="4"/g)).toHaveLength(4);
   });
 
+  it("renders three or more months as smooth monotone paths", () => {
+    const threePoints = [
+      ...points,
+      {
+        ...points[1],
+        month: "2026-09",
+        netWorthCents: "2450000",
+        cashCents: "1450000",
+        investmentCents: "1120000",
+      },
+    ];
+    const { container } = render(
+      createElement(MonthlyTrendCharts, { points: threePoints }),
+    );
+    const lines = [...container.querySelectorAll(".trend-chart-line")];
+    expect(lines).toHaveLength(4);
+    for (const line of lines) expect(line.getAttribute("d")).toContain(" C ");
+  });
+
   it("shows exactly one dashboard chart and switches its financial context", () => {
     const { container } = render(
       createElement(MonthlyTrendPreview, { points }),

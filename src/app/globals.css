@@ -1783,7 +1783,7 @@ button:disabled {
 }
 
 .trend-chart-gridline {
-  stroke: rgb(80 110 130 / 10%);
+  stroke: rgb(91 139 169 / 10%);
   stroke-width: 1;
 }
 
@@ -1857,13 +1857,11 @@ button:disabled {
 
 .trend-chart-tooltip {
   pointer-events: none;
-  backdrop-filter: blur(28px) saturate(120%);
-  -webkit-backdrop-filter: blur(28px) saturate(120%);
 }
 
 .trend-chart-tooltip rect {
-  fill: var(--surface-liquid);
-  filter: drop-shadow(0 10px 30px rgb(60 90 110 / 8%));
+  fill: var(--surface-interactive-fallback);
+  filter: drop-shadow(0 6px 18px rgb(68 137 180 / 6%));
   stroke: var(--border-glass);
 }
 

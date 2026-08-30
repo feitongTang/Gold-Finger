@@ -3,6 +3,7 @@
 import { Fragment, useState } from "react";
 
 import {
+  createMonotoneCurvePath,
   createTrendChartLayout,
   TREND_CHART,
 } from "@/features/monthly-snapshots/trend-chart-model";
@@ -181,16 +182,11 @@ function LineChart({
 
         {series.map((item, seriesIndex) => {
           const points = layout.series[seriesIndex]?.points ?? [];
-          const path = points
-            .map(
-              (point, index) =>
-                `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`,
-            )
-            .join(" ");
+          const path = createMonotoneCurvePath(points);
 
           return (
             <g className={item.className} key={item.id}>
-              <path className="trend-chart-line" d={path} />
+              {path ? <path className="trend-chart-line" d={path} /> : null}
               {points.map((point, index) => {
                 const accessibleLabel = `${formatFullMonth(months[index])}${item.label}：${formatMoney(item.values[index])}`;
 

@@ -128,6 +128,19 @@ describe("Glacier Scale design system", () => {
     expect(css).not.toMatch(/box-shadow:\s*0 20px 60px/);
   });
 
+  it("keeps chart canvases flat and uses ice-blue interactive details", () => {
+    expect(css).toMatch(
+      /\.trend-chart-canvas\s*\{[^}]*background:\s*transparent/,
+    );
+    expect(css).not.toMatch(/\.trend-chart-canvas\s*\{[^}]*backdrop-filter/);
+    expect(css).toMatch(
+      /\.trend-series-net-worth\s*\{[^}]*color:\s*var\(--chart-net-worth\)/,
+    );
+    expect(css).toMatch(
+      /\.trend-chart-tooltip rect\s*\{[^}]*fill:\s*var\(--surface-interactive-fallback\)[^}]*stroke:\s*var\(--border-glass\)/,
+    );
+  });
+
   it("keeps interactive controls large and removes transforms for reduced motion", () => {
     expect(css).toMatch(
       /button,\s*input,\s*select\s*\{[^}]*min-height:\s*40px/,

@@ -157,6 +157,22 @@ describe("Glacier Scale design system", () => {
     );
   });
 
+  it("keeps monthly records in one light shell with solid data fields", () => {
+    expect(css).toMatch(
+      /\.snapshot-form\s*\{[^}]*background:\s*var\(--surface-frosted-fallback\)[^}]*box-shadow:[^}]*var\(--shadow-frosted\)/,
+    );
+    expect(css).toMatch(
+      /input,[\s\S]*?select\s*\{[^}]*background:\s*var\(--surface-solid\)/,
+    );
+    expect(css).toMatch(
+      /\.fund-row\s*\{[^}]*background:\s*var\(--surface-solid\)[^}]*box-shadow:\s*none/,
+    );
+    expect(css).not.toMatch(/\.fund-row\s*\{[^}]*backdrop-filter/);
+    expect(css).toMatch(
+      /\.section-marker\s*\{[^}]*color:\s*var\(--ice-blue-strong\)[^}]*background:\s*var\(--ice-blue-soft\)/,
+    );
+  });
+
   it("keeps interactive controls large and removes transforms for reduced motion", () => {
     expect(css).toMatch(
       /button,\s*input,\s*select\s*\{[^}]*min-height:\s*40px/,

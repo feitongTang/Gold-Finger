@@ -93,6 +93,11 @@ describe("RecordsPageView", () => {
     expect(markup).toContain("基金资产");
     expect(markup).toContain("负债");
     expect(markup).toContain('id="monthly-entry-form"');
+    expect(markup).toContain('class="snapshot-form"');
+    expect(markup.match(/class="entry-section"/g)).toHaveLength(4);
+    expect(markup.match(/class="section-marker"/g)).toHaveLength(4);
+    expect(markup).toContain('class="fund-row"');
+    expect(markup).toContain('class="primary-button"');
     expect(markup).not.toContain('hidden=""');
     expect(markup).not.toContain(
       ["gold-finger", "open-monthly-entry"].join(":"),

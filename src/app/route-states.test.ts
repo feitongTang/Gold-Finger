@@ -12,6 +12,8 @@ describe("route states", () => {
 
     expect(markup).toContain("正在载入");
     expect(markup).toContain('aria-busy="true"');
+    expect(markup).toContain('class="dashboard-loading page-content"');
+    expect(markup).not.toContain('class="app-shell"');
     expect(markup).not.toContain("Gold-Finger");
   });
 

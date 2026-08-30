@@ -173,6 +173,43 @@ describe("Glacier Scale design system", () => {
     );
   });
 
+  it("keeps data safety grouped without nested blur", () => {
+    expect(css).toMatch(
+      /\.data-safety-panel\s*\{[^}]*background:\s*var\(--surface-frosted-fallback\)/,
+    );
+    expect(css).toMatch(
+      /\.safety-card\s*\{[^}]*background:\s*var\(--surface-solid\)[^}]*box-shadow:\s*none/,
+    );
+    expect(css).not.toMatch(/\.safety-card\s*\{[^}]*backdrop-filter/);
+  });
+
+  it("uses static loading and complete reduced-motion boundaries", () => {
+    expect(css).not.toContain("@keyframes skeleton-shimmer");
+    expect(css).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(css).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*?transition-duration:\s*0\.01ms !important/,
+    );
+    expect(css).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*?transform:\s*none !important/,
+    );
+  });
+
+  it("keeps every dense data surface unblurred", () => {
+    for (const selector of [
+      ".allocation-row",
+      ".trend-chart-canvas",
+      ".fund-row",
+      ".safety-card",
+      ".portfolio-holdings-table",
+      ".history-table",
+    ]) {
+      const escaped = selector.replace(".", "\\.");
+      const rule =
+        css.match(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`))?.[1] ?? "";
+      expect(rule).not.toContain("backdrop-filter");
+    }
+  });
+
   it("keeps interactive controls large and removes transforms for reduced motion", () => {
     expect(css).toMatch(
       /button,\s*input,\s*select\s*\{[^}]*min-height:\s*40px/,

@@ -40,6 +40,8 @@ describe("DataSafetyPanel", () => {
     expect(markup).toContain("数据仅保存在这台电脑");
     expect(markup).toContain("导出全部数据");
     expect(markup).toContain("从备份恢复");
+    expect(markup).toContain('class="data-safety-panel surface-frosted"');
+    expect(markup.match(/class="safety-card surface-base"/g)).toHaveLength(2);
     expect(markup).not.toContain("month=");
   });
 

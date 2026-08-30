@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { loadMonthlyEntry } from "@/features/monthly-snapshots/data";
 import {
   currentMonth,
@@ -8,6 +10,7 @@ import { shiftMonth } from "@/features/monthly-snapshots/form-data";
 import { MonthlyHistory } from "@/features/monthly-snapshots/monthly-history";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "历史趋势" };
 
 export default async function TrendsPage({
   searchParams,

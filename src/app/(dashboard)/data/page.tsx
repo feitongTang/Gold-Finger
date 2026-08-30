@@ -1,4 +1,8 @@
+import type { Metadata } from "next";
+
 import { DataSafetyPanel } from "@/features/monthly-snapshots/data-safety-panel";
+
+export const metadata: Metadata = { title: "数据安全" };
 
 export default function DataPage() {
   return (

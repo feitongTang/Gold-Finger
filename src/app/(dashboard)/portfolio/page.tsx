@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { loadMonthlyEntry } from "@/features/monthly-snapshots/data";
 import {
   currentMonth,
@@ -7,6 +9,7 @@ import {
 import { PortfolioPageView } from "@/features/monthly-snapshots/portfolio-page";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "投资组合" };
 
 export default async function PortfolioRoute({
   searchParams,

@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { loadMonthlyEntry } from "@/features/monthly-snapshots/data";
 import {
   currentMonth,
@@ -8,6 +10,7 @@ import { shiftMonth } from "@/features/monthly-snapshots/form-data";
 import { ReviewDashboard } from "@/features/monthly-snapshots/review-dashboard";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "月度复盘" };
 
 export default async function Home({
   searchParams,

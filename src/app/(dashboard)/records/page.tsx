@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { loadMonthlyEntry } from "@/features/monthly-snapshots/data";
 import {
   currentMonth,
@@ -7,6 +9,7 @@ import {
 import { RecordsPageView } from "@/features/monthly-snapshots/records-page";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "月度记录" };
 
 export default async function RecordsRoute({
   searchParams,

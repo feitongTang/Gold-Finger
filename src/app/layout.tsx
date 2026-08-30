@@ -4,7 +4,10 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Gold-Finger",
+  title: {
+    default: "Gold-Finger",
+    template: "%s | Gold-Finger",
+  },
   description: "个人月度财务复盘工具",
 };
 

@@ -141,6 +141,22 @@ describe("Glacier Scale design system", () => {
     );
   });
 
+  it("uses one light shell and flat data interiors on review and portfolio", () => {
+    expect(css).toMatch(
+      /\.review-status-card\s*\{[^}]*background:\s*var\(--surface-frosted-fallback\)[^}]*box-shadow:[^}]*var\(--shadow-frosted\)/,
+    );
+    expect(css).toMatch(
+      /\.review-analysis-panel\s*\{[^}]*background:\s*var\(--surface-solid\)/,
+    );
+    expect(css).not.toMatch(/\.allocation-row\s*\{[^}]*backdrop-filter/);
+    expect(css).toMatch(
+      /\.allocation-row-button:hover[^}]*background:\s*color-mix\(in srgb, var\(--ice-blue\) 6%, transparent\)/,
+    );
+    expect(css).toMatch(
+      /\.portfolio-holdings-table\s*\{[^}]*background:\s*var\(--surface-solid\)/,
+    );
+  });
+
   it("keeps interactive controls large and removes transforms for reduced motion", () => {
     expect(css).toMatch(
       /button,\s*input,\s*select\s*\{[^}]*min-height:\s*40px/,

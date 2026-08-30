@@ -51,9 +51,27 @@ function formatMonth(month: string) {
   return `${year} 年 ${Number(monthNumber)} 月`;
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+type MetricTone = "positive" | "negative" | undefined;
+
+function deltaTone(cents: bigint): MetricTone {
+  if (cents > BigInt(0)) return "positive";
+  if (cents < BigInt(0)) return "negative";
+  return undefined;
+}
+
+function Metric({
+  label,
+  tone,
+  value,
+}: {
+  label: string;
+  tone?: MetricTone;
+  value: string;
+}) {
   return (
-    <div className="monthly-flow-metric">
+    <div
+      className={`monthly-flow-metric${tone ? ` monthly-flow-metric-${tone}` : ""}`}
+    >
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>
@@ -203,10 +221,12 @@ export function ReviewDashboard({
         />
         <Metric
           label="投资损益"
+          tone={deltaTone(review.cashFlow.investmentProfitLossCents)}
           value={formatDelta(review.cashFlow.investmentProfitLossCents)}
         />
         <Metric
           label="月度结余"
+          tone={deltaTone(review.cashFlow.balanceCents)}
           value={formatDelta(review.cashFlow.balanceCents)}
         />
       </dl>

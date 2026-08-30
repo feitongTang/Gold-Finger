@@ -81,7 +81,13 @@ describe("ReviewDashboard", () => {
     expect(markup).toContain('href="/trends?month=2026-08"');
     expect(markup).toContain('href="/portfolio?month=2026-08"');
     expect(markup).not.toContain("删除本月");
-    expect(markup.match(/class="monthly-flow-metric"/g)).toHaveLength(5);
+    expect(markup.match(/class="monthly-flow-metric(?: |")/g)).toHaveLength(5);
+    expect(markup).toContain(
+      'class="monthly-flow-metric monthly-flow-metric-positive"',
+    );
+    expect(markup).toContain(
+      'class="monthly-flow-metric monthly-flow-metric-negative"',
+    );
     expect(markup).toContain("资产变化趋势，共 2 个已保存月份");
     expect(markup).not.toContain("review-analysis-placeholder");
     expect(markup).not.toContain("纳斯达克100");

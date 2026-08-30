@@ -2,65 +2,81 @@
 
 :root {
   color-scheme: light;
-  --bg-base: #f3f7fb;
-  --ambient-blue: rgb(174 213 235 / 22%);
-  --ambient-violet: rgb(205 210 242 / 14%);
-  --ambient-mint: rgb(184 223 219 / 10%);
-  --surface-base: rgb(255 255 255 / 36%);
-  --surface-frosted: rgb(255 255 255 / 62%);
-  --surface-liquid: rgb(255 255 255 / 68%);
-  --surface-frosted-fallback: rgb(248 251 253 / 94%);
-  --surface-liquid-fallback: rgb(250 252 254 / 96%);
-  --border-soft: rgb(90 120 140 / 10%);
-  --border-glass: rgb(255 255 255 / 70%);
-  --border-frosted-secondary: rgb(120 150 170 / 10%);
-  --text-primary: #182531;
-  --text-secondary: #60717e;
-  --text-muted: #82919c;
-  --positive: #477a69;
-  --negative: #9a625e;
-  --shadow-card: 0 10px 35px rgb(60 90 115 / 5%);
-  --shadow-floating: 0 6px 20px rgb(60 90 115 / 7%);
-  --blur-frosted: 24px;
-  --blur-liquid: 30px;
-  --fog-gray: rgb(95 125 145 / 12%);
-  --background-primary: var(--bg-base);
-  --background-secondary: #e9f1f7;
-  --surface-primary: rgb(255 255 255 / 82%);
-  --surface-subtle: var(--surface-base);
+  --background: #f4f8fb;
+  --ambient-ice: rgb(168 221 248 / 14%);
+  --ambient-air: rgb(211 235 249 / 12%);
+
+  --surface-solid: rgb(255 255 255 / 82%);
+  --surface-frosted: rgb(255 255 255 / 48%);
+  --surface-interactive: rgb(238 248 255 / 60%);
+  --surface-frosted-fallback: rgb(249 252 254 / 94%);
+  --surface-interactive-fallback: rgb(242 249 253 / 96%);
+
+  --text-primary: #22313a;
+  --text-secondary: #657784;
+  --text-muted: #8294a0;
+
+  --ice-blue: #82bde2;
+  --ice-blue-strong: #3f7fa8;
+  --ice-blue-soft: rgb(130 189 226 / 12%);
+
+  --positive: #487f9b;
+  --negative: #a36f75;
+  --warning: #8a744d;
+
+  --border-soft: rgb(91 139 169 / 12%);
+  --border-glass: rgb(255 255 255 / 78%);
+  --border-glass-cool: rgb(109 174 214 / 14%);
+  --focus-ring: #3f7fa8;
+
+  --shadow-frosted: 0 8px 28px rgb(66 112 140 / 4%);
+  --shadow-interactive: 0 6px 18px rgb(68 137 180 / 6%);
+  --blur-frosted: 16px;
+  --blur-interactive: 22px;
+
+  --bg-base: var(--background);
+  --surface-base: var(--surface-solid);
+  --surface-liquid: var(--surface-interactive);
+  --surface-liquid-fallback: var(--surface-interactive-fallback);
+  --shadow-card: var(--shadow-frosted);
+  --shadow-floating: var(--shadow-interactive);
+  --blur-liquid: var(--blur-interactive);
+  --fog-gray: var(--border-soft);
+  --background-primary: var(--background);
+  --background-secondary: #edf5fa;
+  --surface-primary: var(--surface-solid);
+  --surface-subtle: rgb(255 255 255 / 58%);
   --surface-elevated: rgb(255 255 255 / 92%);
   --text-tertiary: var(--text-muted);
-  --text-inverse: #ffffff;
+  --text-inverse: #fff;
   --border-subtle: var(--border-soft);
-  --border-strong: #aec1cf;
-  --border-interactive: #718899;
-  --accent-primary: #426e8b;
-  --accent-hover: #355f7b;
-  --accent-active: #294f69;
-  --accent-soft: #e5eff6;
-  --focus-ring: rgb(66 110 139 / 32%);
-  --glass-surface: rgb(255 255 255 / 44%);
-  --glass-surface-tinted: rgb(125 164 193 / 18%);
-  --glass-surface-hover: rgb(255 255 255 / 58%);
-  --glass-surface-pressed: rgb(125 164 193 / 25%);
-  --glass-highlight-primary: rgb(255 255 255 / 82%);
-  --glass-highlight-secondary: rgb(109 155 188 / 38%);
+  --border-strong: rgb(91 139 169 / 28%);
+  --border-interactive: rgb(63 127 168 / 42%);
+  --accent-primary: var(--ice-blue-strong);
+  --accent-hover: #347398;
+  --accent-active: #2b6384;
+  --accent-soft: var(--ice-blue-soft);
+  --glass-surface: var(--surface-interactive);
+  --glass-surface-tinted: var(--ice-blue-soft);
+  --glass-surface-hover: var(--surface-interactive-fallback);
+  --glass-surface-pressed: var(--surface-interactive);
+  --glass-highlight-primary: var(--border-glass);
+  --glass-highlight-secondary: var(--border-glass-cool);
   --success: var(--positive);
-  --success-soft: #eef3f0;
-  --warning: #80663d;
-  --warning-soft: #f5f0e8;
+  --success-soft: var(--ice-blue-soft);
+  --warning-soft: color-mix(in srgb, var(--warning) 8%, white);
   --error: var(--negative);
-  --error-soft: #f6ecea;
-  --asset-cash: #bbc6c8;
-  --asset-investment: #536b89;
-  --asset-stocks: var(--asset-investment);
-  --asset-bonds: #7c9398;
-  --asset-other: #a48658;
-  --chart-net-worth: var(--accent-primary);
-  --chart-cash: #7c9398;
-  --chart-investment: var(--asset-investment);
-  --chart-income: var(--success);
-  --chart-liability: var(--error);
+  --error-soft: color-mix(in srgb, var(--negative) 7%, white);
+  --chart-net-worth: var(--ice-blue-strong);
+  --chart-cash: #8eafc3;
+  --chart-investment: #6f9fbe;
+  --chart-income: var(--positive);
+  --chart-liability: var(--negative);
+  --asset-investment: var(--chart-investment);
+  --asset-stocks: var(--ice-blue-strong);
+  --asset-bonds: #9bb9ca;
+  --asset-other: #c7d7e0;
+  --asset-cash: #d9e5eb;
   --radius-compact: 6px;
   --radius-control: 10px;
   --radius-panel: 16px;
@@ -98,7 +114,7 @@
 }
 
 html {
-  background: var(--bg-base);
+  background: var(--background);
 }
 
 body {
@@ -106,10 +122,9 @@ body {
   margin: 0;
   color: var(--text-primary);
   background:
-    radial-gradient(circle at 18% 12%, var(--ambient-blue), transparent 34%),
-    radial-gradient(circle at 84% 15%, var(--ambient-violet), transparent 30%),
-    radial-gradient(circle at 65% 55%, var(--ambient-mint), transparent 38%),
-    var(--bg-base);
+    radial-gradient(circle at 82% 8%, var(--ambient-ice), transparent 42%),
+    radial-gradient(circle at 12% 76%, var(--ambient-air), transparent 36%),
+    var(--background);
   background-attachment: fixed;
   font-family:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Segoe UI",
@@ -140,21 +155,23 @@ button:disabled {
 
 .surface-base {
   border: 1px solid var(--border-soft);
-  background: var(--surface-base);
+  background: var(--surface-solid);
 }
 
 .surface-frosted {
   border: 1px solid var(--border-glass);
   background: var(--surface-frosted-fallback);
-  box-shadow: var(--shadow-card);
+  box-shadow:
+    var(--shadow-frosted),
+    inset 0 1px 0 var(--border-glass);
 }
 
 .surface-liquid {
   border: 1px solid var(--border-glass);
-  background: var(--surface-liquid-fallback);
+  background: var(--surface-interactive-fallback);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 75%),
-    var(--shadow-floating);
+    inset 0 1px 0 var(--border-glass),
+    var(--shadow-interactive);
 }
 
 @supports (
@@ -162,14 +179,14 @@ button:disabled {
 ) {
   .surface-frosted {
     background: var(--surface-frosted);
-    backdrop-filter: blur(var(--blur-frosted)) saturate(115%);
-    -webkit-backdrop-filter: blur(var(--blur-frosted)) saturate(115%);
+    backdrop-filter: blur(var(--blur-frosted)) saturate(108%);
+    -webkit-backdrop-filter: blur(var(--blur-frosted)) saturate(108%);
   }
 
   .surface-liquid {
-    background: var(--surface-liquid);
-    backdrop-filter: blur(var(--blur-liquid)) saturate(120%);
-    -webkit-backdrop-filter: blur(var(--blur-liquid)) saturate(120%);
+    background: var(--surface-interactive);
+    backdrop-filter: blur(var(--blur-interactive)) saturate(112%);
+    -webkit-backdrop-filter: blur(var(--blur-interactive)) saturate(112%);
   }
 }
 
@@ -181,7 +198,7 @@ button:disabled {
   }
 
   .surface-liquid {
-    background: var(--surface-liquid-fallback);
+    background: var(--surface-interactive-fallback);
   }
 }
 

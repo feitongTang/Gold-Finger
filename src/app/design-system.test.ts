@@ -3,66 +3,64 @@ import { describe, expect, it } from "vitest";
 
 const css = readFileSync(new URL("./globals.css", import.meta.url), "utf8");
 
-describe("Ice Crystal design system", () => {
-  it("defines the approved ambient, surface, text, and motion tokens", () => {
-    expect(css).toContain("--bg-base: #f3f7fb");
-    expect(css).toContain("--ambient-blue: rgb(174 213 235 / 22%)");
-    expect(css).toContain("--ambient-violet: rgb(205 210 242 / 14%)");
-    expect(css).toContain("--ambient-mint: rgb(184 223 219 / 10%)");
-    expect(css).toContain("--surface-base: rgb(255 255 255 / 36%)");
-    expect(css).toContain("--surface-frosted: rgb(255 255 255 / 62%)");
-    expect(css).toContain("--surface-liquid: rgb(255 255 255 / 68%)");
-    expect(css).toContain("--border-soft: rgb(90 120 140 / 10%)");
-    expect(css).toContain("--border-glass: rgb(255 255 255 / 70%)");
-    expect(css).toContain("--border-frosted-secondary: rgb(120 150 170 / 10%)");
-    expect(css).toContain("--text-primary: #182531");
-    expect(css).toContain("--text-secondary: #60717e");
-    expect(css).toContain("--text-muted: #82919c");
-    expect(css).toContain("--positive: #477a69");
-    expect(css).toContain("--negative: #9a625e");
-    expect(css).toContain("--shadow-card: 0 10px 35px rgb(60 90 115 / 5%)");
-    expect(css).toContain("--shadow-floating: 0 6px 20px rgb(60 90 115 / 7%)");
-    expect(css).toContain("--blur-frosted: 24px");
-    expect(css).toContain("--blur-liquid: 30px");
+describe("Glacier Scale design system", () => {
+  it("defines the approved Glacier Scale token roles", () => {
+    expect(css).toContain("--background: #f4f8fb");
+    expect(css).toContain("--ambient-ice: rgb(168 221 248 / 14%)");
+    expect(css).toContain("--ambient-air: rgb(211 235 249 / 12%)");
+    expect(css).toContain("--surface-solid: rgb(255 255 255 / 82%)");
+    expect(css).toContain("--surface-frosted: rgb(255 255 255 / 48%)");
+    expect(css).toContain("--surface-interactive: rgb(238 248 255 / 60%)");
+    expect(css).toContain("--surface-frosted-fallback: rgb(249 252 254 / 94%)");
+    expect(css).toContain(
+      "--surface-interactive-fallback: rgb(242 249 253 / 96%)",
+    );
+    expect(css).toContain("--text-primary: #22313a");
+    expect(css).toContain("--text-secondary: #657784");
+    expect(css).toContain("--text-muted: #8294a0");
+    expect(css).toContain("--ice-blue: #82bde2");
+    expect(css).toContain("--ice-blue-strong: #3f7fa8");
+    expect(css).toContain("--positive: #487f9b");
+    expect(css).toContain("--negative: #a36f75");
+    expect(css).toContain("--blur-frosted: 16px");
+    expect(css).toContain("--blur-interactive: 22px");
+    expect(css).not.toContain("--ambient-violet");
+    expect(css).not.toContain("--ambient-mint");
   });
 
-  it("applies the three ambient gradients before the base background", () => {
+  it("keeps ambient ice light outside a clean mist-white base", () => {
     const bodyRule = css.match(/body\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
-    const blue = bodyRule.indexOf("var(--ambient-blue)");
-    const violet = bodyRule.indexOf("var(--ambient-violet)");
-    const mint = bodyRule.indexOf("var(--ambient-mint)");
-    const base = bodyRule.indexOf("var(--bg-base)");
+    const ice = bodyRule.indexOf("var(--ambient-ice)");
+    const air = bodyRule.indexOf("var(--ambient-air)");
+    const base = bodyRule.indexOf("var(--background)");
 
-    expect(blue).toBeGreaterThanOrEqual(0);
-    expect(violet).toBeGreaterThan(blue);
-    expect(mint).toBeGreaterThan(violet);
-    expect(base).toBeGreaterThan(mint);
+    expect(ice).toBeGreaterThanOrEqual(0);
+    expect(air).toBeGreaterThan(ice);
+    expect(base).toBeGreaterThan(air);
   });
 
-  it("keeps blur on frosted and liquid utilities with opaque fallbacks", () => {
+  it("limits blur to persistent and interactive glass with near-solid fallbacks", () => {
     const baseRule = css.match(/\.surface-base\s*\{([^}]*)\}/)?.[1] ?? "";
     const frostedRule = css.match(/\.surface-frosted\s*\{([^}]*)\}/)?.[1] ?? "";
     const liquidRule = css.match(/\.surface-liquid\s*\{([^}]*)\}/)?.[1] ?? "";
 
-    expect(baseRule).toContain("background: var(--surface-base)");
+    expect(baseRule).toContain("background: var(--surface-solid)");
+    expect(baseRule).not.toContain("backdrop-filter");
     expect(frostedRule).toContain(
       "background: var(--surface-frosted-fallback)",
     );
-    expect(frostedRule).toContain("border: 1px solid var(--border-glass)");
-    expect(frostedRule).toContain("box-shadow: var(--shadow-card)");
-    expect(liquidRule).toContain("background: var(--surface-liquid-fallback)");
-    expect(liquidRule).toContain("border: 1px solid var(--border-glass)");
-    expect(liquidRule).toContain("var(--shadow-floating)");
+    expect(frostedRule).toContain("var(--shadow-frosted)");
+    expect(liquidRule).toContain(
+      "background: var(--surface-interactive-fallback)",
+    );
+    expect(liquidRule).toContain("var(--shadow-interactive)");
     expect(css).toMatch(
-      /@supports not\s*\(\s*\(backdrop-filter:\s*blur\(1px\)\)/,
+      /\.surface-frosted\s*\{[^}]*backdrop-filter:\s*blur\(var\(--blur-frosted\)\)/,
     );
     expect(css).toMatch(
-      /@supports[\s\S]*?\.surface-frosted\s*\{[^}]*backdrop-filter:\s*blur\(var\(--blur-frosted\)\) saturate\(115%\)[^}]*-webkit-backdrop-filter:\s*blur\(var\(--blur-frosted\)\) saturate\(115%\)/,
+      /\.surface-liquid\s*\{[^}]*backdrop-filter:\s*blur\(var\(--blur-interactive\)\)/,
     );
-    expect(css).toMatch(
-      /@supports[\s\S]*?\.surface-liquid\s*\{[^}]*backdrop-filter:\s*blur\(var\(--blur-liquid\)\) saturate\(120%\)[^}]*-webkit-backdrop-filter:\s*blur\(var\(--blur-liquid\)\) saturate\(120%\)/,
-    );
-    expect(baseRule).not.toContain("backdrop-filter");
+    expect(css).toMatch(/@supports not\s*\(\s*\(backdrop-filter:/);
   });
 
   it("sets numeric typography and reduced-motion boundaries", () => {

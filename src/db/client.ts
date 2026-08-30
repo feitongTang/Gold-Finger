@@ -18,7 +18,10 @@ export function resolveApplicationDatabaseFile(
   workingDirectory = process.cwd(),
 ) {
   if (environment.GOLD_FINGER_MODE === "demo")
-    return resolve(workingDirectory, demoDatabaseFile);
+    return (
+      environment.GOLD_FINGER_DEMO_DATABASE_FILE ??
+      resolve(workingDirectory, demoDatabaseFile)
+    );
 
   return environment.DATABASE_FILE ?? defaultDatabaseFile;
 }

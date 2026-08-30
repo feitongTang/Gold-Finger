@@ -73,20 +73,16 @@ describe("MonthlyTrendCharts", () => {
 
     expect(container.querySelectorAll("figure")).toHaveLength(1);
     expect(
-      screen
-        .getByRole("button", { name: "资产变化" })
-        .getAttribute("aria-pressed"),
+      screen.getByRole("button", { name: "资产" }).getAttribute("aria-pressed"),
     ).toBe("true");
     expect(screen.getByRole("img", { name: /资产变化趋势/ })).toBeTruthy();
     expect(screen.queryByRole("img", { name: /收入与支出趋势/ })).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "收支变化" }));
+    fireEvent.click(screen.getByRole("button", { name: "收支" }));
 
     expect(container.querySelectorAll("figure")).toHaveLength(1);
     expect(
-      screen
-        .getByRole("button", { name: "收支变化" })
-        .getAttribute("aria-pressed"),
+      screen.getByRole("button", { name: "收支" }).getAttribute("aria-pressed"),
     ).toBe("true");
     expect(screen.getByRole("img", { name: /收入与支出趋势/ })).toBeTruthy();
     expect(screen.queryByRole("img", { name: /资产变化趋势/ })).toBeNull();
@@ -97,22 +93,28 @@ describe("MonthlyTrendCharts", () => {
 
     expect(container.querySelectorAll("figure")).toHaveLength(1);
     expect(
-      screen
-        .getByRole("button", { name: "资产变化" })
-        .getAttribute("aria-pressed"),
+      screen.getByRole("button", { name: "资产" }).getAttribute("aria-pressed"),
     ).toBe("true");
     expect(screen.getByRole("img", { name: /资产变化趋势/ })).toBeTruthy();
     expect(screen.queryByRole("img", { name: /收入与支出趋势/ })).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "收支变化" }));
+    fireEvent.click(screen.getByRole("button", { name: "收支" }));
 
     expect(container.querySelectorAll("figure")).toHaveLength(1);
     expect(
-      screen
-        .getByRole("button", { name: "收支变化" })
-        .getAttribute("aria-pressed"),
+      screen.getByRole("button", { name: "收支" }).getAttribute("aria-pressed"),
     ).toBe("true");
     expect(screen.getByRole("img", { name: /收入与支出趋势/ })).toBeTruthy();
     expect(screen.queryByRole("img", { name: /资产变化趋势/ })).toBeNull();
+  });
+
+  it("uses the same full month labels as the business page headings", () => {
+    const { container } = render(createElement(MonthlyTrendCharts, { points }));
+
+    expect(
+      [...container.querySelectorAll(".trend-chart-month")].map(
+        (label) => label.textContent,
+      ),
+    ).toEqual(["2026 年 7 月", "2026 年 8 月"]);
   });
 });

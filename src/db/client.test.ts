@@ -36,6 +36,19 @@ describe("openDatabase", () => {
     ).toBe("/public/gold-finger/data/gold-finger-demo.db");
   });
 
+  it("uses an explicitly shared database in demo mode", () => {
+    expect(
+      resolveApplicationDatabaseFile(
+        {
+          GOLD_FINGER_MODE: "demo",
+          GOLD_FINGER_DEMO_DATABASE_FILE: "/shared/gold-finger-demo.db",
+          DATABASE_FILE: "/private/personal-assets.db",
+        },
+        "/public/gold-finger-v2",
+      ),
+    ).toBe("/shared/gold-finger-demo.db");
+  });
+
   it("uses the configured database outside demo mode", () => {
     expect(
       resolveApplicationDatabaseFile(

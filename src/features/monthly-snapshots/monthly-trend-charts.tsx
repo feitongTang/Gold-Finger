@@ -2,6 +2,7 @@
 
 import { Fragment, useState } from "react";
 
+import { formatMonthLabel } from "@/features/monthly-snapshots/month-routing";
 import {
   createMonotoneCurvePath,
   createTrendChartLayout,
@@ -32,6 +33,9 @@ type ActiveChartPoint = {
   x: number;
   y: number;
 };
+
+const TOOLTIP_WIDTH = 208;
+const TOOLTIP_HEIGHT = 56;
 
 const currencyFormatter = new Intl.NumberFormat("zh-CN", {
   style: "currency",
@@ -71,16 +75,6 @@ function formatAxisMoney(cents: bigint) {
   return `${sign}¥${absoluteCents / BigInt(100)}`;
 }
 
-function formatShortMonth(month: string) {
-  const [year, monthNumber] = month.split("-");
-  return `${year.slice(2)}.${monthNumber}`;
-}
-
-function formatFullMonth(month: string) {
-  const [year, monthNumber] = month.split("-");
-  return `${year} 年 ${Number(monthNumber)} 月`;
-}
-
 function LineChart({
   ariaLabel,
   months,
@@ -102,14 +96,14 @@ function LineChart({
     : undefined;
   const tooltipX = activePoint
     ? Math.min(
-        TREND_CHART.right - 90,
-        Math.max(TREND_CHART.left + 90, activePoint.x),
+        TREND_CHART.right - TOOLTIP_WIDTH / 2,
+        Math.max(TREND_CHART.left + TOOLTIP_WIDTH / 2, activePoint.x),
       )
     : 0;
   const tooltipY = activePoint
-    ? activePoint.y < TREND_CHART.top + 54
+    ? activePoint.y < TREND_CHART.top + TOOLTIP_HEIGHT + 10
       ? activePoint.y + 14
-      : activePoint.y - 56
+      : activePoint.y - TOOLTIP_HEIGHT - 12
     : 0;
 
   return (
@@ -176,7 +170,7 @@ function LineChart({
             x={monthPoints[index]?.x ?? TREND_CHART.left}
             y={TREND_CHART.height - 5}
           >
-            {formatShortMonth(month)}
+            {formatMonthLabel(month)}
           </text>
         ))}
 
@@ -188,7 +182,7 @@ function LineChart({
             <g className={item.className} key={item.id}>
               {path ? <path className="trend-chart-line" d={path} /> : null}
               {points.map((point, index) => {
-                const accessibleLabel = `${formatFullMonth(months[index])}${item.label}：${formatMoney(item.values[index])}`;
+                const accessibleLabel = `${formatMonthLabel(months[index])}${item.label}：${formatMoney(item.values[index])}`;
 
                 return (
                   <Fragment key={months[index]}>
@@ -241,18 +235,24 @@ function LineChart({
             className="trend-chart-tooltip"
             transform={`translate(${tooltipX} ${tooltipY})`}
           >
-            <rect height="44" rx="8" width="180" x="-90" y="0" />
+            <rect
+              height={TOOLTIP_HEIGHT}
+              rx="10"
+              width={TOOLTIP_WIDTH}
+              x={-TOOLTIP_WIDTH / 2}
+              y="0"
+            />
             <text
               className="trend-chart-tooltip-label"
               textAnchor="middle"
-              y="16"
+              y="20"
             >
-              {formatFullMonth(activePoint.month)} · {activePoint.label}
+              {formatMonthLabel(activePoint.month)} · {activePoint.label}
             </text>
             <text
               className="trend-chart-tooltip-value"
               textAnchor="middle"
-              y="34"
+              y="42"
             >
               {formatMoney(activePoint.value)}
             </text>
@@ -343,14 +343,14 @@ export function MonthlyTrendPreview({
             onClick={() => setMode("assets")}
             type="button"
           >
-            资产变化
+            资产
           </button>
           <button
             aria-pressed={mode === "cash-flow"}
             onClick={() => setMode("cash-flow")}
             type="button"
           >
-            收支变化
+            收支
           </button>
         </div>
       </figcaption>
@@ -445,14 +445,14 @@ export function MonthlyTrendCharts({
               onClick={() => setMode("assets")}
               type="button"
             >
-              资产变化
+              资产
             </button>
             <button
               aria-pressed={mode === "cash-flow"}
               onClick={() => setMode("cash-flow")}
               type="button"
             >
-              收支变化
+              收支
             </button>
           </div>
         </div>

@@ -5,14 +5,17 @@ import { spawnSync } from "node:child_process";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectDirectory = resolve(scriptDirectory, "..");
-const demoDatabase = resolve(projectDirectory, "data/gold-finger-demo.db");
+const demoDatabase =
+  process.env.GOLD_FINGER_DEMO_DATABASE_FILE ??
+  resolve(projectDirectory, "data/gold-finger-demo.db");
+const demoPort = process.env.GOLD_FINGER_PORT ?? "3001";
 
 for (const suffix of ["", "-shm", "-wal"]) {
   rmSync(`${demoDatabase}${suffix}`, { force: true });
 }
 
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
-const result = spawnSync(npmCommand, ["run", "dev", "--", "--port", "3001"], {
+const result = spawnSync(npmCommand, ["run", "dev", "--", "--port", demoPort], {
   cwd: projectDirectory,
   env: { ...process.env, GOLD_FINGER_MODE: "demo" },
   stdio: "inherit",

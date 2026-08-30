@@ -35,9 +35,11 @@ describe("MonthlyHistory", () => {
     );
 
     expect(markup).toContain("历史趋势");
-    expect(markup).toContain("资产变化");
-    expect(markup).toContain("收支变化");
-    expect(markup).toContain("2026-08");
+    expect(markup).toContain(">资产</button>");
+    expect(markup).toContain(">收支</button>");
+    expect(markup).not.toContain(">资产变化</button>");
+    expect(markup).not.toContain(">收支变化</button>");
+    expect(markup).toContain("2026 年 8 月");
     expect(markup).toContain("月度财务趋势数据表");
     expect(markup).toContain("月度结余");
     expect(markup).toContain("净资产");

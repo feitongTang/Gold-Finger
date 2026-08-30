@@ -81,6 +81,7 @@ describe("ReviewDashboard", () => {
     expect(markup).toContain('href="/trends?month=2026-08"');
     expect(markup).toContain('href="/portfolio?month=2026-08"');
     expect(markup).not.toContain("删除本月");
+    expect(markup).not.toContain("跨月一致性");
     expect(markup.match(/class="monthly-flow-metric(?: |")/g)).toHaveLength(5);
     expect(markup).toContain(
       'class="monthly-flow-metric monthly-flow-metric-positive"',
@@ -89,10 +90,22 @@ describe("ReviewDashboard", () => {
       'class="monthly-flow-metric monthly-flow-metric-negative"',
     );
     expect(markup).toContain("资产变化趋势，共 2 个已保存月份");
+    expect(markup).toContain(">资产</button>");
+    expect(markup).toContain(">收支</button>");
+    expect(markup).not.toContain(">资产变化</button>");
+    expect(markup).not.toContain(">收支变化</button>");
     expect(markup).not.toContain("review-analysis-placeholder");
     expect(markup).not.toContain("纳斯达克100");
+    expect(markup).toContain(
+      '<header class="review-page-heading review-toolbar">',
+    );
+    expect(
+      markup.match(/class="review-analysis-panel surface-frosted"/g),
+    ).toHaveLength(2);
 
-    const toolbarIndex = markup.indexOf('class="review-toolbar"');
+    const toolbarIndex = markup.indexOf(
+      'class="review-page-heading review-toolbar"',
+    );
     const statusIndex = markup.indexOf('class="review-status-card');
     const flowIndex = markup.indexOf('class="monthly-flow-strip');
     const analysisIndex = markup.indexOf('class="review-analysis-grid"');

@@ -42,6 +42,8 @@ describe("PortfolioPageView", () => {
     );
 
     expect(markup).toContain("投资组合");
+    expect(markup.match(/组合概览/g)).toHaveLength(1);
+    expect(markup).not.toContain("投资状态");
     expect(markup).toContain("当前投资市值");
     expect(markup).toContain("本月净投入");
     expect(markup).toContain("资产配置");

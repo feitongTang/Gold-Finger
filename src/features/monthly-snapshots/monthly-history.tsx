@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-import { monthHref } from "@/features/monthly-snapshots/month-routing";
+import {
+  formatMonthLabel,
+  monthHref,
+} from "@/features/monthly-snapshots/month-routing";
 import { MonthSwitcher } from "@/features/monthly-snapshots/month-switcher";
 import { shiftMonth } from "@/features/monthly-snapshots/form-data";
 import {
@@ -31,11 +34,6 @@ function formatMoney(cents: bigint) {
 
 function formatDelta(cents: bigint) {
   return `${cents > BigInt(0) ? "+" : ""}${formatMoney(cents)}`;
-}
-
-function formatMonth(month: string) {
-  const [year, monthNumber] = month.split("-");
-  return `${year} 年 ${Number(monthNumber)} 月`;
 }
 
 function amountDirection(cents: bigint, lowerIsBetter = false) {
@@ -73,7 +71,7 @@ export function MonthlyHistory({
     >
       <header className="review-page-heading">
         <div>
-          <p className="review-eyebrow">截至 {formatMonth(month)}</p>
+          <p className="review-eyebrow">{formatMonthLabel(month)}</p>
           <h1 id="history-title">历史趋势</h1>
         </div>
         <MonthSwitcher month={month} pathname="/trends" />
@@ -151,7 +149,7 @@ export function MonthlyHistory({
                       <tr key={point.month}>
                         <th scope="row">
                           <Link href={monthHref("/", point.month)}>
-                            {formatMonth(point.month)}
+                            {formatMonthLabel(point.month)}
                           </Link>
                         </th>
                         {metrics.map(

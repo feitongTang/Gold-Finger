@@ -135,7 +135,7 @@ describe("AssetAllocation", () => {
     ).toBe("true");
   });
 
-  it("keeps the allocation overview and top level rows in summary density", () => {
+  it("keeps only the allocation overview in summary density", () => {
     const { container } = render(
       createElement(AssetAllocation, {
         density: "summary",
@@ -150,7 +150,27 @@ describe("AssetAllocation", () => {
     expect(screen.getByLabelText("资产配置图例")).toBeTruthy();
     expect(screen.getAllByText("股票").length).toBeGreaterThan(0);
     expect(screen.getAllByText("现金").length).toBeGreaterThan(0);
+    expect(screen.getByRole("figure", { name: "资产配置" })).toBeTruthy();
+    expect(screen.queryByText("全部可配置资产")).toBeNull();
     expect(screen.queryByText("纳斯达克100")).toBeNull();
+    expect(container.querySelector(".asset-allocation-tree")).toBeNull();
     expect(container.querySelector(".allocation-row-button")).toBeNull();
+  });
+
+  it("keeps the overview bar unchanged when an allocation group is expanded", () => {
+    const { container } = render(
+      createElement(AssetAllocation, {
+        items: allocationItems,
+        totalCents: BigInt(10_000),
+      }),
+    );
+
+    const stockButton = screen.getByRole("button", { name: /股票/ });
+    fireEvent.click(stockButton);
+
+    expect(container.querySelector(".allocation-segment-active")).toBeNull();
+    expect(container.querySelector(".allocation-segment-dimmed")).toBeNull();
+    expect(stockButton.getAttribute("aria-pressed")).toBeNull();
+    expect(screen.queryByRole("button", { name: /债券/ })).toBeNull();
   });
 });

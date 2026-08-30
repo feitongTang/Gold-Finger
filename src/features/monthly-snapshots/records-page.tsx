@@ -1,4 +1,7 @@
-import { monthHref } from "@/features/monthly-snapshots/month-routing";
+import {
+  formatMonthLabel,
+  monthHref,
+} from "@/features/monthly-snapshots/month-routing";
 import { MonthSwitcher } from "@/features/monthly-snapshots/month-switcher";
 import { MonthlyRecordActions } from "@/features/monthly-snapshots/monthly-record-actions";
 import {
@@ -28,9 +31,7 @@ export function RecordsPageView({
     >
       <header className="review-page-heading">
         <div>
-          <p className="review-eyebrow">
-            {snapshot ? "本月已有记录，可直接更新" : "本月尚未记录"}
-          </p>
+          <p className="review-eyebrow">{formatMonthLabel(month)}</p>
           <h1 id="records-title">月度记录</h1>
         </div>
         <MonthSwitcher month={month} pathname="/records" />

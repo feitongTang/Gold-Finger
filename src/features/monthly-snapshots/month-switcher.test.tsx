@@ -14,5 +14,5 @@ it("links to the adjacent months on the current business page", () => {
 
   expect(markup).toContain('href="/portfolio?month=2026-07"');
   expect(markup).toContain('href="/portfolio?month=2026-09"');
-  expect(markup).toContain('<time dateTime="2026-08">2026-08</time>');
+  expect(markup).toContain('<time dateTime="2026-08">2026 年 8 月</time>');
 });

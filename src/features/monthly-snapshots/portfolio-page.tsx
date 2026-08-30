@@ -2,7 +2,10 @@ import Link from "next/link";
 
 import type { InvestmentCategoryId } from "@/db/schema";
 import { AssetAllocation } from "@/features/monthly-snapshots/investment-allocation";
-import { monthHref } from "@/features/monthly-snapshots/month-routing";
+import {
+  formatMonthLabel,
+  monthHref,
+} from "@/features/monthly-snapshots/month-routing";
 import { MonthSwitcher } from "@/features/monthly-snapshots/month-switcher";
 import type { MonthlySnapshot } from "@/features/monthly-snapshots/repository";
 import {
@@ -40,16 +43,11 @@ function formatDelta(cents: bigint) {
   return `${cents > BigInt(0) ? "+" : ""}${formatMoney(cents)}`;
 }
 
-function formatMonth(month: string) {
-  const [year, monthNumber] = month.split("-");
-  return `${year} 年 ${Number(monthNumber)} 月`;
-}
-
 function PortfolioToolbar({ month }: { month: string }) {
   return (
     <header className="review-page-heading">
       <div>
-        <p className="review-eyebrow">{formatMonth(month)}</p>
+        <p className="review-eyebrow">{formatMonthLabel(month)}</p>
         <h1 id="portfolio-title">投资组合</h1>
       </div>
       <MonthSwitcher month={month} pathname="/portfolio" />
@@ -113,8 +111,7 @@ export function PortfolioPageView({
         className="portfolio-overview surface-frosted"
       >
         <div className="portfolio-overview-heading">
-          <p className="review-eyebrow">组合概览</p>
-          <h2 id="portfolio-overview-title">投资状态</h2>
+          <h2 id="portfolio-overview-title">组合概览</h2>
           <Link href={monthHref("/records", month)}>更新月度记录</Link>
         </div>
         <dl className="portfolio-primary-metrics">

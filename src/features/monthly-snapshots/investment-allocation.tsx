@@ -169,8 +169,7 @@ export function AssetAllocation({
 
   return (
     <div className="asset-allocation">
-      <figure className="asset-allocation-overview">
-        <figcaption>全部可配置资产</figcaption>
+      <figure aria-label="资产配置" className="asset-allocation-overview">
         <div
           aria-label={items
             .map(
@@ -199,28 +198,8 @@ export function AssetAllocation({
           ))}
         </ul>
       </figure>
-      <div className="asset-allocation-tree">
-        {density === "summary" ? (
-          <ul className="allocation-list allocation-list-summary">
-            {items.map((item) => {
-              const tone = assetTone(item);
-
-              return (
-                <li
-                  className={tone ? `allocation-tone-${tone}` : undefined}
-                  key={item.id}
-                >
-                  <AllocationRow
-                    depth={0}
-                    isExpanded={false}
-                    item={item}
-                    parentLabel={null}
-                  />
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
+      {density === "full" ? (
+        <div className="asset-allocation-tree">
           <AllocationTree
             depth={0}
             expandedIds={expandedIds}
@@ -228,8 +207,8 @@ export function AssetAllocation({
             onToggle={toggle}
             parentLabel={null}
           />
-        )}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }

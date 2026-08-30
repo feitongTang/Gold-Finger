@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   currentMonth,
+  formatMonthLabel,
   monthHref,
   resolveMonthQuery,
 } from "@/features/monthly-snapshots/month-routing";
@@ -20,5 +21,9 @@ describe("month routing", () => {
 
   it("derives the natural month from an injected date", () => {
     expect(currentMonth(new Date(2026, 7, 28))).toBe("2026-08");
+  });
+
+  it("formats the selected month consistently for every business page", () => {
+    expect(formatMonthLabel("2026-08")).toBe("2026 年 8 月");
   });
 });

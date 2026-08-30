@@ -68,4 +68,53 @@ describe("demo start command", () => {
     expect(existsSync(`${demoDatabase}-wal`)).toBe(false);
     expect(readFileSync(personalDatabase, "utf8")).toBe("personal data");
   });
+
+  it("resets an explicitly shared demo database and uses the configured port", () => {
+    const projectDirectory = mkdtempSync(join(tmpdir(), "gold-finger-demo-"));
+    const sharedDirectory = mkdtempSync(join(tmpdir(), "gold-finger-shared-"));
+    temporaryDirectories.push(projectDirectory, sharedDirectory);
+    const scriptDirectory = join(projectDirectory, "scripts");
+    const binDirectory = join(projectDirectory, "bin");
+    const dataDirectory = join(projectDirectory, "data");
+    mkdirSync(scriptDirectory, { recursive: true });
+    mkdirSync(binDirectory);
+    mkdirSync(dataDirectory);
+    cpSync(sourceScript, join(scriptDirectory, "start-demo.mjs"));
+
+    const localDemoDatabase = join(dataDirectory, "gold-finger-demo.db");
+    const sharedDemoDatabase = join(sharedDirectory, "gold-finger-demo.db");
+    writeFileSync(localDemoDatabase, "local demo data");
+    writeFileSync(sharedDemoDatabase, "shared demo data");
+    writeFileSync(`${sharedDemoDatabase}-shm`, "shared demo journal");
+
+    const npmLog = join(projectDirectory, "npm.log");
+    const fakeNpm = join(binDirectory, "npm");
+    writeFileSync(
+      fakeNpm,
+      '#!/bin/sh\nprintf "%s|%s\n" "$*" "$GOLD_FINGER_MODE" > "$NPM_LOG"\n',
+    );
+    chmodSync(fakeNpm, 0o755);
+
+    const result = spawnSync(
+      process.execPath,
+      [join(scriptDirectory, "start-demo.mjs")],
+      {
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${binDirectory}:/usr/bin:/bin`,
+          NPM_LOG: npmLog,
+          GOLD_FINGER_DEMO_DATABASE_FILE: sharedDemoDatabase,
+          GOLD_FINGER_PORT: "3003",
+        },
+      },
+    );
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(readFileSync(npmLog, "utf8")).toBe("run dev -- --port 3003|demo\n");
+    expect(existsSync(sharedDemoDatabase)).toBe(false);
+    expect(existsSync(`${sharedDemoDatabase}-shm`)).toBe(false);
+    expect(readFileSync(localDemoDatabase, "utf8")).toBe("local demo data");
+  });
 });

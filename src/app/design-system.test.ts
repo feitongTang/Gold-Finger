@@ -5,12 +5,14 @@ const css = readFileSync(new URL("./globals.css", import.meta.url), "utf8");
 
 describe("Glacier Scale design system", () => {
   it("defines the approved Glacier Scale token roles", () => {
-    expect(css).toContain("--background: #f4f8fb");
-    expect(css).toContain("--ambient-ice: rgb(168 221 248 / 14%)");
-    expect(css).toContain("--ambient-air: rgb(211 235 249 / 12%)");
-    expect(css).toContain("--surface-solid: rgb(255 255 255 / 82%)");
-    expect(css).toContain("--surface-frosted: rgb(255 255 255 / 48%)");
-    expect(css).toContain("--surface-interactive: rgb(238 248 255 / 60%)");
+    expect(css).toContain("--background: #e8f4fa");
+    expect(css).toContain("--ambient-ice: rgb(92 190 239 / 38%)");
+    expect(css).toContain("--ambient-air: rgb(142 218 239 / 30%)");
+    expect(css).toContain("--ambient-mint: rgb(121 218 190 / 25%)");
+    expect(css).toContain("--ambient-lilac: rgb(178 154 226 / 24%)");
+    expect(css).toContain("--surface-solid: rgb(255 255 255 / 76%)");
+    expect(css).toContain("--surface-frosted: rgb(255 255 255 / 36%)");
+    expect(css).toContain("--surface-interactive: rgb(238 248 255 / 48%)");
     expect(css).toContain("--surface-frosted-fallback: rgb(249 252 254 / 94%)");
     expect(css).toContain(
       "--surface-interactive-fallback: rgb(242 249 253 / 96%)",
@@ -22,30 +24,35 @@ describe("Glacier Scale design system", () => {
     expect(css).toContain("--ice-blue-strong: #3f7fa8");
     expect(css).toContain("--positive: #487f9b");
     expect(css).toContain("--negative: #a36f75");
-    expect(css).toContain("--blur-frosted: 16px");
-    expect(css).toContain("--blur-interactive: 22px");
+    expect(css).toContain("--border-glass: rgb(255 255 255 / 88%)");
+    expect(css).toContain("--blur-frosted: 22px");
+    expect(css).toContain("--blur-interactive: 26px");
     expect(css).not.toContain("--ambient-violet");
-    expect(css).not.toContain("--ambient-mint");
   });
 
-  it("keeps ambient ice light outside a clean mist-white base", () => {
+  it("blends cool ambient hues before the clean mist-white base", () => {
     const bodyRule = css.match(/body\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
     const ice = bodyRule.indexOf("var(--ambient-ice)");
     const air = bodyRule.indexOf("var(--ambient-air)");
+    const mint = bodyRule.indexOf("var(--ambient-mint)");
+    const lilac = bodyRule.indexOf("var(--ambient-lilac)");
     const base = bodyRule.indexOf("var(--background)");
 
     expect(ice).toBeGreaterThanOrEqual(0);
     expect(air).toBeGreaterThan(ice);
-    expect(base).toBeGreaterThan(air);
+    expect(mint).toBeGreaterThan(air);
+    expect(lilac).toBeGreaterThan(mint);
+    expect(base).toBeGreaterThan(lilac);
+    expect(bodyRule).toMatch(/linear-gradient\(\s*145deg/);
+    expect(bodyRule).not.toMatch(/url\(|repeating-/);
   });
 
-  it("limits blur to persistent and interactive glass with near-solid fallbacks", () => {
+  it("uses frosted glass for every shared module surface", () => {
     const baseRule = css.match(/\.surface-base\s*\{([^}]*)\}/)?.[1] ?? "";
     const frostedRule = css.match(/\.surface-frosted\s*\{([^}]*)\}/)?.[1] ?? "";
     const liquidRule = css.match(/\.surface-liquid\s*\{([^}]*)\}/)?.[1] ?? "";
 
-    expect(baseRule).toContain("background: var(--surface-solid)");
-    expect(baseRule).not.toContain("backdrop-filter");
+    expect(baseRule).toContain("background: var(--surface-frosted-fallback)");
     expect(frostedRule).toContain(
       "background: var(--surface-frosted-fallback)",
     );
@@ -58,8 +65,13 @@ describe("Glacier Scale design system", () => {
       /\.surface-frosted\s*\{[^}]*backdrop-filter:\s*blur\(var\(--blur-frosted\)\)/,
     );
     expect(css).toMatch(
+      /\.surface-base\s*\{[^}]*backdrop-filter:\s*blur\(var\(--blur-frosted\)\)/,
+    );
+    expect(css).toMatch(
       /\.surface-liquid\s*\{[^}]*backdrop-filter:\s*blur\(var\(--blur-interactive\)\)/,
     );
+    expect(css).not.toContain("saturate(108%)");
+    expect(css).not.toContain("saturate(112%)");
     expect(css).toMatch(/@supports not\s*\(\s*\(backdrop-filter:/);
   });
 
@@ -75,15 +87,31 @@ describe("Glacier Scale design system", () => {
     );
   });
 
-  it("keeps shared interactive glass pale and only slightly elevated", () => {
+  it("keeps shared interactive glass pale without moving controls on hover", () => {
     expect(css).toMatch(
       /\.primary-button,[\s\S]*?\.retry-button\s*\{[^}]*background:\s*var\(--surface-interactive-fallback\)[^}]*box-shadow:\s*var\(--shadow-interactive\)/,
     );
     expect(css).toMatch(
       /\.primary-button:hover:not\(:disabled\)[^}]*background:\s*color-mix\(\s*in srgb,\s*var\(--ice-blue\) 12%,\s*var\(--surface-interactive-fallback\)\s*\)/,
     );
-    expect(css).not.toMatch(/translateY\(-1px\)/);
+    expect(css).not.toContain("translateY(-1px)");
+    expect(css).not.toContain("translateX(2px)");
     expect(css).not.toMatch(/scale\(0\.98\)/);
+  });
+
+  it("keeps review tooltips more readable than full-history tooltips", () => {
+    expect(css).toMatch(
+      /\.trend-chart-preview\s*\{[^}]*--trend-tooltip-label-size:\s*20px[^}]*--trend-tooltip-value-size:\s*24px/,
+    );
+    expect(css).toMatch(
+      /\.trend-chart-full\s*\{[^}]*--trend-tooltip-label-size:\s*10px[^}]*--trend-tooltip-value-size:\s*12px/,
+    );
+    expect(css).toMatch(
+      /\.trend-chart-tooltip-label\s*\{[^}]*font-size:\s*var\(--trend-tooltip-label-size\)/,
+    );
+    expect(css).toMatch(
+      /\.trend-chart-tooltip-value\s*\{[^}]*font-size:\s*var\(--trend-tooltip-value-size\)/,
+    );
   });
 
   it("sets numeric typography and reduced-motion boundaries", () => {
@@ -141,19 +169,28 @@ describe("Glacier Scale design system", () => {
     );
   });
 
-  it("uses one light shell and flat data interiors on review and portfolio", () => {
+  it("uses equal-height frosted summary modules with a flat allocation preview", () => {
     expect(css).toMatch(
       /\.review-status-card\s*\{[^}]*background:\s*var\(--surface-frosted-fallback\)[^}]*box-shadow:[^}]*var\(--shadow-frosted\)/,
     );
     expect(css).toMatch(
-      /\.review-analysis-panel\s*\{[^}]*background:\s*var\(--surface-solid\)/,
+      /\.review-analysis-panel\s*\{[^}]*background:\s*var\(--surface-frosted-fallback\)/,
+    );
+    expect(css).toMatch(
+      /\.review-analysis-grid\s*\{[^}]*align-items:\s*stretch/,
+    );
+    expect(css).toMatch(
+      /\.review-analysis-panel\s*\{[^}]*display:\s*flex[^}]*flex-direction:\s*column/,
+    );
+    expect(css).toMatch(
+      /\.review-analysis-grid \.asset-allocation\s*\{[^}]*display:\s*grid[^}]*flex:\s*1[^}]*align-items:\s*center[^}]*border:\s*0/,
     );
     expect(css).not.toMatch(/\.allocation-row\s*\{[^}]*backdrop-filter/);
     expect(css).toMatch(
       /\.allocation-row-button:hover[^}]*background:\s*color-mix\(in srgb, var\(--ice-blue\) 6%, transparent\)/,
     );
     expect(css).toMatch(
-      /\.portfolio-holdings-table\s*\{[^}]*background:\s*var\(--surface-solid\)/,
+      /\.portfolio-holdings-table\s*\{[^}]*background:\s*transparent/,
     );
   });
 
@@ -173,14 +210,13 @@ describe("Glacier Scale design system", () => {
     );
   });
 
-  it("keeps data safety grouped without nested blur", () => {
+  it("keeps data safety modules on the shared frosted surface", () => {
     expect(css).toMatch(
       /\.data-safety-panel\s*\{[^}]*background:\s*var\(--surface-frosted-fallback\)/,
     );
-    expect(css).toMatch(
-      /\.safety-card\s*\{[^}]*background:\s*var\(--surface-solid\)[^}]*box-shadow:\s*none/,
+    expect(css).not.toMatch(
+      /\.safety-card\s*\{[^}]*background:\s*var\(--surface-solid\)/,
     );
-    expect(css).not.toMatch(/\.safety-card\s*\{[^}]*backdrop-filter/);
   });
 
   it("uses static loading and complete reduced-motion boundaries", () => {

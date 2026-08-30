@@ -2,7 +2,10 @@ import Link from "next/link";
 
 import type { InvestmentCategoryId } from "@/db/schema";
 import { AssetAllocation } from "@/features/monthly-snapshots/investment-allocation";
-import { monthHref } from "@/features/monthly-snapshots/month-routing";
+import {
+  formatMonthLabel,
+  monthHref,
+} from "@/features/monthly-snapshots/month-routing";
 import { MonthSwitcher } from "@/features/monthly-snapshots/month-switcher";
 import {
   MonthlyTrendPreview,
@@ -11,7 +14,6 @@ import {
 import type { MonthlySnapshot } from "@/features/monthly-snapshots/repository";
 import {
   calculateInvestmentAllocation,
-  calculateMonthlyConsistency,
   calculateMonthlyReview,
   calculateMonthlyTrend,
 } from "@/features/monthly-snapshots/review-model";
@@ -46,11 +48,6 @@ function formatDelta(cents: bigint) {
   return `${cents > BigInt(0) ? "+" : ""}${formatMoney(cents)}`;
 }
 
-function formatMonth(month: string) {
-  const [year, monthNumber] = month.split("-");
-  return `${year} 年 ${Number(monthNumber)} 月`;
-}
-
 type MetricTone = "positive" | "negative" | undefined;
 
 function deltaTone(cents: bigint): MetricTone {
@@ -80,9 +77,9 @@ function Metric({
 
 function ReviewToolbar({ month }: { month: string }) {
   return (
-    <header className="review-toolbar">
+    <header className="review-page-heading review-toolbar">
       <div>
-        <p className="review-eyebrow">{formatMonth(month)}</p>
+        <p className="review-eyebrow">{formatMonthLabel(month)}</p>
         <h1 id="review-title" tabIndex={-1}>
           月度复盘
         </h1>
@@ -144,7 +141,6 @@ export function ReviewDashboard({
   const netWorthChange = previousReview
     ? review.assets.netWorthCents - previousReview.assets.netWorthCents
     : null;
-  const consistency = calculateMonthlyConsistency(snapshot, previousSnapshot);
   const allocation = calculateInvestmentAllocation(
     {
       emergencyFundCents: BigInt(snapshot.cash.emergencyFundCents),
@@ -194,19 +190,6 @@ export function ReviewDashboard({
             <dd>{formatMoney(review.assets.liabilityCents)}</dd>
           </div>
         </dl>
-        {consistency ? (
-          <details className="review-consistency">
-            <summary>跨月一致性</summary>
-            <p>
-              净资产可解释差额：
-              {formatDelta(consistency.unexplainedNetWorthChangeCents)}
-            </p>
-            <p>
-              投资市值解释差额：
-              {formatDelta(consistency.unexplainedInvestmentChangeCents)}
-            </p>
-          </details>
-        ) : null}
       </div>
 
       <dl className="monthly-flow-strip surface-frosted">
@@ -233,7 +216,7 @@ export function ReviewDashboard({
 
       <div className="review-analysis-grid">
         <section
-          className="review-analysis-panel"
+          className="review-analysis-panel surface-frosted"
           aria-labelledby="trend-preview-title"
         >
           <div className="review-analysis-heading">

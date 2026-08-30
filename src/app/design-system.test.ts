@@ -63,6 +63,29 @@ describe("Glacier Scale design system", () => {
     expect(css).toMatch(/@supports not\s*\(\s*\(backdrop-filter:/);
   });
 
+  it("keeps the sidebar frosted while current navigation uses a small ice-blue scale", () => {
+    expect(css).toMatch(
+      /\.app-sidebar\s*\{[^}]*background:\s*var\(--surface-frosted\)[^}]*backdrop-filter:\s*blur\(var\(--blur-frosted\)\)/,
+    );
+    expect(css).toMatch(
+      /\.app-sidebar a\[aria-current="page"\]\s*\{[^}]*background:\s*var\(--ice-blue-soft\)[^}]*box-shadow:\s*none/,
+    );
+    expect(css).toMatch(
+      /\.app-sidebar a\[aria-current="page"\]::before\s*\{[^}]*background:\s*var\(--ice-blue\)/,
+    );
+  });
+
+  it("keeps shared interactive glass pale and only slightly elevated", () => {
+    expect(css).toMatch(
+      /\.primary-button,[\s\S]*?\.retry-button\s*\{[^}]*background:\s*var\(--surface-interactive-fallback\)[^}]*box-shadow:\s*var\(--shadow-interactive\)/,
+    );
+    expect(css).toMatch(
+      /\.primary-button:hover:not\(:disabled\)[^}]*background:\s*color-mix\(\s*in srgb,\s*var\(--ice-blue\) 12%,\s*var\(--surface-interactive-fallback\)\s*\)/,
+    );
+    expect(css).not.toMatch(/translateY\(-1px\)/);
+    expect(css).not.toMatch(/scale\(0\.98\)/);
+  });
+
   it("sets numeric typography and reduced-motion boundaries", () => {
     expect(css).toMatch(
       /\.financial-number,\s*\.metric-card dd,\s*\.asset-summary-card dd,\s*\.history-table td\s*\{[^}]*font-variant-numeric:\s*tabular-nums[^}]*font-feature-settings:\s*"tnum"/,
